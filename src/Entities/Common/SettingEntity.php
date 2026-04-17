@@ -9,49 +9,100 @@
 namespace App\Entities\Common;
 
 
-use Wanphp\Libray\Mysql\EntityTrait;
+use Doctrine\DBAL\Types\Types;
+use OpenApi\Attributes as OA;
+use WanPHP\Core\Attribute\Column;
+use WanPHP\Core\Attribute\DataTable;
+use WanPHP\Core\Traits\EntityArrayTrait;
 
-/**
- * Class Setting
- * @package App\Entities\Common
- * @OA\Schema(
- *   title="系统自定义配置",
- *   description="系统配置数据结构",
- *   required={"name","key","value"}
- * )
- */
-class SettingEntity implements \JsonSerializable
+#[DataTable(name: 'sys_setting', required: ["name", "key", "value"])]
+#[OA\Schema(title: "系统自定义配置", description: "系统自定义配置", required: ["name", "key", "value"])]
+class SettingEntity
 {
-  use EntityTrait;
+  use EntityArrayTrait;
+
+  #[Column(type: Types::SMALLINT, autoIncrement: true, primary: true)]
+  #[OA\Property(description: "主键ID")]
+  private int $id;
+  #[Column(type: Types::STRING, length: 20, index: true)]
+  #[OA\Property(description: "配置项名称")]
+  private string $name;
+  #[Column(type: Types::STRING, length: 30, unique: true)]
+  #[OA\Property(description: "配置项键")]
+  private string $key;
+  #[Column(type: Types::STRING, length: 300)]
+  #[OA\Property(description: "配置项值")]
+  private string $value;
 
   /**
-   * @DBType({"key":"PRI","type":"smallint NOT NULL AUTO_INCREMENT"})
-   * @OA\Property(format="int32", description="ID")
-   * @var integer
+   * @return int
    */
-  private int $id;
+  public function getId(): int
+  {
+    return $this->id;
+  }
+
   /**
-   * @DBType({"type":"varchar(20) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="配置项名称")
-   * @var string
+   * @param int $id
+   * @return SettingEntity
    */
-  private string $name;
+  public function setId(int $id): self
+  {
+    $this->id = $id;
+    return $this;
+  }
+
   /**
-   * @DBType({"key":"PRI","type":"varchar(30) not null DEFAULT ''"})
-   * @OA\Property(description="配置项键")
-   * @var string
+   * @return string
    */
-  private string $key;
+  public function getName(): string
+  {
+    return $this->name;
+  }
+
   /**
-   * @DBType({"type":"varchar(300) not null DEFAULT ''"})
-   * @OA\Property(description="配置项值")
-   * @var string
+   * @param string $name
+   * @return SettingEntity
    */
-  private string $value;
+  public function setName(string $name): self
+  {
+    $this->name = $name;
+    return $this;
+  }
+
   /**
-   * @DBType({"type":" tinyint(4) NOT NULL DEFAULT '0'"})
-   * @OA\Property(description="显示排序")
-   * @var integer
+   * @return string
    */
-  private int $sortOrder;
+  public function getKey(): string
+  {
+    return $this->key;
+  }
+
+  /**
+   * @param string $key
+   * @return SettingEntity
+   */
+  public function setKey(string $key): self
+  {
+    $this->key = $key;
+    return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getValue(): string
+  {
+    return $this->value;
+  }
+
+  /**
+   * @param string $value
+   * @return SettingEntity
+   */
+  public function setValue(string $value): self
+  {
+    $this->value = $value;
+    return $this;
+  }
 }

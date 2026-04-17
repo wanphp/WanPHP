@@ -9,23 +9,28 @@
 namespace App\Application\Actions\Common;
 
 
-use App\Application\Actions\Action;
+use App\Application\Middleware\PermissionMiddleware;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Log\LoggerInterface;
-use Wanphp\Libray\Slim\CacheInterface;
+use Psr\SimpleCache\CacheInterface;
+use WanPHP\Core\Action;
+use WanPHP\Core\Attribute\Route;
 
 class ClearCacheAction extends Action
 {
-  private CacheInterface $cache;
 
-  public function __construct(LoggerInterface $logger, CacheInterface $cache)
+  public function __construct(private readonly CacheInterface $cache)
   {
-    $this->cache = $cache;
-    parent::__construct($logger);
   }
 
+  #[Route(
+    path: '/clearCache',
+    methods: ['GET'],
+    description: '清除缓存记录',
+    name: 'app.clearCache',
+    middleware: [PermissionMiddleware::class])
+  ]
   protected function action(): Response
   {
-    return $this->respondWithData(['msg' => '清除记录' . $this->cache->clear() . '!']);
+    return $this->respondWithData(['reload' => true, 'message' => '清除缓存记录:' . $this->cache->clear() . '!']);
   }
 }

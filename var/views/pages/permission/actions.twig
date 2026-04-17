@@ -1,0 +1,114 @@
+<div data-page="app.permission" hx-get="{{ url_for('app.permission') }}" hx-trigger="refresh-page from:body"
+     hx-target="this" hx-swap="outerHTML">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="d-grid">
+        <button type="button" class="btn btn-primary mb-3"
+                hx-get="{{ url_for('app.navigate.add') }}"
+                hx-target="body"
+                hx-swap="beforeend"
+                hx-select="unset"
+                data-modal-size="sm"
+                data-modal-backdrop="static"
+                data-modal-name="app.navigate.modal">
+          添加菜单
+        </button>
+      </div>
+      {% for index, item in menus %}
+        <div class="card mb-3">
+          <div class="card-header">
+            <h3 class="card-title"><i class="{{ item.icon }}"></i> {{ item.name }}</h3>
+
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+                <i data-lte-icon="expand" class="fas fa-plus"></i>
+                <i data-lte-icon="collapse" class="fas fa-minus"></i>
+              </button>
+              <button type="button" class="btn btn-tool" data-bs-toggle="tooltip" title="修改"
+                      hx-get="{{ url_for('app.navigate.edit',{id:item.id}) }}"
+                      hx-target="body"
+                      hx-swap="beforeend"
+                      hx-select="unset"
+                      data-modal-size="sm"
+                      data-modal-backdrop="static"
+                      data-modal-name="app.navigate.modal">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" class="btn btn-tool" data-bs-toggle="tooltip" title="删除"
+                      hx-delete="{{ url_for('app.navigate.delete',{id:item.id}) }}"
+                      hx-disabled-elt="this"
+                      hx-confirm="是否确认要删除?"
+                      hx-swap="none" hx-headers='{"Hx-Trigger": "refresh-page"}'>
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+          {% if item.sublist %}
+            <div class="card-body p-0">
+              <ul class="nav nav-pills flex-column sublist"
+                  data-action="{{ url_for('app.permission', {id: item.id}) }}">
+                {% for nav in item.sublist %}
+                  <li class="nav-item" data-id="{{ nav.id }}">
+                    <a href="javascript:" class="nav-link pe-2">
+                      <i class="far fa-circle nav-icon"></i> {{ nav.description }}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+          <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+      {% endfor %}
+    </div>
+    <!-- /.col -->
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">权限管理</h3>
+
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+              <i data-lte-icon="expand" class="fas fa-plus"></i>
+              <i data-lte-icon="collapse" class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+              <th>所属菜单</th>
+              <th>名称</th>
+              <th>路由</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for action in actions %}
+              <tr>
+                <td class="p-1">
+                  <select name="navId" hx-post="{{ url_for('app.permission', {id: action.id}) }}" hx-trigger="change"
+                          hx-swap="none" hx-headers='{"HX-Trigger": "refresh-page"}'
+                          class="form-select">
+                    <option value="0">请选择</option>
+                    {% for index, menu in menus %}
+                      <option {{ (index==action.navId)?
+                      'selected':'' }} value="{{ index }}">{{ menu.name }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td>{{ action.description }}</td>
+                <td>{{ action.path }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <!-- /.card-body -->
+      </div>
+      <!-- /.card -->
+    </div>
+    <!-- /.col -->
+  </div>
+</div>

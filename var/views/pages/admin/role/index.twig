@@ -1,0 +1,25 @@
+<div data-page="app.admin.role" class="card">
+  <div class="card-header">
+    <h3 class="card-title">{{ title }}</h3>
+
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool open-modal"
+              hx-get="{{ url_for('app.admin.role.add') }}"
+              hx-target="body"
+              hx-swap="beforeend"
+              hx-select="unset"
+              data-modal-name="app.admin.role.modal"
+              data-modal-size="lg"
+              data-modal-backdrop="static"
+              data-bs-toggle="tooltip" data-bs-title="添加管理角色">
+        <i class="fas fa-users-cog"></i>添加
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <table id="admin-role-table" data-action="{{ url_for('app.admin.role') }}"
+           class="table table-sm table-bordered"></table>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->

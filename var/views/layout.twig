@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh">
+<!--begin::Head-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <title>{{ title }}</title>
+  <!--begin::Accessibility Meta Tags-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+  <link rel="shortcut icon" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="{{ app_css_path }}"/>
+  <script type="module" src="{{ app_js_path }}"></script>
+</head>
+<body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary layout-fixed sidebar-open">
+<!--begin::App Wrapper-->
+<div class="app-wrapper">
+  <!--begin::Header-->
+  {% include 'pages/common/header.twig' %}
+  <!--end::Header-->
+  <!--begin::Sidebar-->
+  {% include 'pages/common/sidebar.twig' %}
+  <!--end::Sidebar-->
+  <!--begin::App Main-->
+  <main class="app-main">
+    <div class="app-content px-0 px-md-1">
+      <!--begin::Container-->
+      <div class="container-fluid pt-3" id="app-content" hx-target="this" hx-swap="innerHTML">
+        {% block container %}{% endblock %}
+      </div>
+      <!--end::Container-->
+    </div>
+    <!--end::App Content-->
+  </main>
+  <!--end::App Main-->
+  <!--begin::Footer-->
+  {% include 'pages/common/footer.twig' %}
+  <!--end::Footer-->
+</div>
+<!--end::App Wrapper-->
+</body>
+<!--end::Body-->
+</html>

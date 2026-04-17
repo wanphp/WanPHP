@@ -1,0 +1,64 @@
+<div class="card" hx-get="{{ url_for('app.client.scope') }}"
+     hx-trigger="refresh-page from:body" hx-target="this" hx-swap="outerHTML">
+  <div class="card-header">
+    <h3 class="card-title">{{ title }}</h3>
+
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool open-modal"
+              hx-get="{{ url_for('app.client.scope.add') }}"
+              hx-target="body"
+              hx-swap="beforeend"
+              hx-select="unset"
+              hx-disabled-elt="this"
+              hx-indicator="this"
+              data-modal-name="app.client.scope.modal"
+              data-modal-size="lg"
+              data-modal-backdrop="static"
+              data-bs-toggle="tooltip" data-bs-title="添加客户端">
+        <i class="fas fa-plus-circle normal"></i><i class="fas fa-spinner fa-spin loading d-none"></i>添加
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <table class="table table-sm table-bordered table-hover">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>名称</th>
+        <th>描述</th>
+        <th>授权范围</th>
+        <th>操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for scope in scopes %}
+        <tr>
+          <td>{{ scope.identifier }}</td>
+          <td>{{ scope.name }}</td>
+          <td>{{ scope.description }}</td>
+          <td>{{ scope.scopes | join("\n") | nl2br }}</td>
+          <td class="align-middle">
+            <button type="button" class="btn btn-tool" data-bs-toggle="tooltip" data-bs-title="修改"
+                    hx-get="{{ url_for('app.client.scope.edit',{id:scope.id}) }}"
+                    hx-target="body"
+                    hx-swap="beforeend"
+                    hx-select="unset"
+                    data-modal-name="app.client.scope.modal"
+                    data-modal-size="lg"
+                    data-modal-backdrop="static">
+              <i class="fas fa-edit"></i></button>
+            <button type="button" class="btn btn-tool" data-bs-toggle="tooltip" data-bs-title="删除"
+                    hx-delete="{{ url_for('app.client.scope.delete',{id:scope.id}) }}"
+                    hx-disabled-elt="this"
+                    hx-confirm="是否确认要删除此项授权?"
+                    hx-swap="none" hx-headers='{"Hx-Trigger": "refresh-page"}'>
+              <i class="fas fa-trash-alt"></i></button>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->

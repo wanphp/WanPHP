@@ -1,0 +1,49 @@
+{% extends "pages/common/modal.twig" %}
+
+{% block modal_body %}
+  <form hx-post="{{ action }}"
+        hx-swap="none"
+        hx-headers='{"HX-Trigger": "refresh-page"}'
+        class="needs-validation"
+        data-modal-form
+        data-reset
+        novalidate>
+    <div class="row g-3 pb-2 align-items-center">
+      <div class="col-auto"><label for="name" class="col-form-label">配置名称</label></div>
+      <div class="col-auto">
+        <input type="text" id="name" name="name" value="{{ setting.name }}" class="form-control" required
+               style="width: 204px">
+      </div>
+      <div class="col-auto"><span class="form-text">请填写配置名称</span></div>
+    </div>
+    <div class="row g-3 pb-2 align-items-center">
+      <div class="col-auto"><label for="key" class="col-form-label">配置键名</label></div>
+      <div class="col-auto">
+        <input type="text" id="key" name="key" value="{{ setting.key }}" class="form-control" required
+               autocomplete="off" pattern="^[a-z][a-z\d_]{1,30}$" style="width: 204px">
+      </div>
+      <div class="col-auto">
+        <span class="form-text">请填写配置键名</span>
+      </div>
+    </div>
+    <div class="from-group mb-3">
+      <label for="value">请填写配置键值
+        <button id="upload_image" type="button" class="btn btn-tool" data-bs-toggle="tooltip" data-bs-title="上传图片"
+                data-action="{{ url_for('app.file.upload') }}">
+          <i class="fa fa-file-upload"></i></button>
+      </label>
+      {% if setting.value matches '/\\.(jpg|jpeg|png|gif|webp)$/i' %}
+        <textarea id="value" name="value" class="form-control" rows="5" required
+                  autocomplete="off" style="display: none">{{ setting.value }}</textarea>
+        <img src="{{ setting.value }}" class="img-fluid rounded border" alt="{{ setting.name }}">
+      {% else %}
+        <textarea id="value" name="value" class="form-control" rows="5" required
+                  autocomplete="off">{{ setting.value }}</textarea>
+      {% endif %}
+    </div>
+
+    <div class="d-grid gap-2 mt-3 col-6 mx-auto">
+      <button type="submit" class="btn btn-primary">提交</button>
+    </div>
+  </form>
+{% endblock %}

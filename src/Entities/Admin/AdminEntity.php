@@ -8,113 +8,309 @@
 
 namespace App\Entities\Admin;
 
+use Doctrine\DBAL\Types\Types;
+use OpenApi\Attributes as OA;
+use WanPHP\Core\Attribute\Column;
+use WanPHP\Core\Attribute\DataTable;
+use WanPHP\Core\Traits\EntityArrayTrait;
 
-use Wanphp\Libray\Mysql\EntityTrait;
-
-/**
- * Class Admin
- * @package App\Entities\Admin
- * @OA\Schema(
- *   title="系统管理员",
- *   description="系统管理员数据结构",
- *   required={"account","password"}
- * )
- */
-class AdminEntity implements \JsonSerializable
+#[DataTable(name: 'admin', required: ["account", "password"])]
+#[OA\Schema(title: "系统管理员", description: "系统管理员", required: ["account", "password"])]
+class AdminEntity
 {
-  use EntityTrait;
+  use EntityArrayTrait;
+
+  #[Column(type: Types::SMALLINT, autoIncrement: true, primary: true)]
+  #[OA\Property(description: "管理员ID")]
+  private ?int $id;
+  #[Column(type: Types::STRING, length: 50, unique: true)]
+  #[OA\Property(description: "登录帐号", type: "string")]
+  private string $account;
+  #[Column(type: Types::STRING, length: 60)]
+  #[OA\Property(description: "登录密码", type: "string")]
+  private string $password;
+  #[Column(type: Types::SMALLINT, default: 0, index: true)]
+  #[OA\Property(description: "添加管理员的管理员id")]
+  private int $parentId;
+  #[Column(type: Types::STRING, length: 28, nullable: true, unique: true)]
+  #[OA\Property(description: "绑定公众号/小程序openid", type: "string")]
+  private string $openid;
+  #[Column(type: Types::STRING, length: 16, index: true)]
+  #[OA\Property(description: "用户姓名", type: "string")]
+  protected string $name;
+  #[Column(type: Types::STRING, length: 11, nullable: true, unique: true)]
+  #[OA\Property(description: "用户联系电话", type: "string")]
+  protected string $tel;
+  #[Column(type: Types::SMALLINT, default: 0, index: true)]
+  #[OA\Property(description: "角色ID")]
+  private int $role_id;
+  #[Column(type: Types::SMALLINT, default: 0, index: true)]
+  #[OA\Property(description: "分组ID")]
+  private int $groupId;
+  #[Column(type: Types::STRING, length: 10)]
+  #[OA\Property(description: "最后登录时间", type: "string")]
+  private int $lastLoginTime;
+  #[Column(type: Types::STRING, length: 50)]
+  #[OA\Property(description: "最后登录IP", type: "string")]
+  private string $lastLoginIp;
+  #[Column(type: Types::STRING, length: 10)]
+  #[OA\Property(description: "最后修改密码", type: "string")]
+  private string $lastEditPwd;
+  #[Column(type: Types::BOOLEAN)]
+  #[OA\Property(description: "帐号状态", type: "int")]
+  private int $status;
+  #[Column(type: Types::STRING, length: 10, index: true)]
+  #[OA\Property(description: "创建时间", type: "integer")]
+  private int $createdAt;
 
   /**
-   * @DBType({"key": "PRI","type":"smallint(4) NOT NULL AUTO_INCREMENT"})
-   * @OA\Property(format="int32", description="管理员ID")
-   * @var integer|null
+   * @return int|null
    */
-  private ?int $id;
+  public function getId(): ?int
+  {
+    return $this->id;
+  }
+
   /**
-   * @DBType({"key": "UNI","type":"varchar(50) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="帐号")
-   * @var string
+   * @param int|null $id
+   * @return AdminEntity
    */
-  private string $account;
+  public function setId(?int $id): self
+  {
+    $this->id = $id;
+    return $this;
+  }
+
   /**
-   * @DBType({"type":"char(32) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="密码")
-   * @var string
+   * @return string
    */
-  private string $password;
+  public function getAccount(): string
+  {
+    return $this->account;
+  }
+
   /**
-   * @DBType({"type":"smallint(6) NOT NULL DEFAULT 0"})
-   * @var integer
-   * @OA\Property(description="添加管理员的管理员id")
+   * @param string $account
+   * @return AdminEntity
    */
-  private int $parentId;
+  public function setAccount(string $account): self
+  {
+    $this->account = $account;
+    return $this;
+  }
+
   /**
-   * @DBType({"key": "UNI","type":"int(11) NULL DEFAULT NULL"})
-   * @OA\Property(description="绑定用户")
-   * @var integer
+   * @return string
    */
-  private int $uid;
+  public function getPassword(): string
+  {
+    return $this->password;
+  }
+
   /**
-   * @DBType({"type":"varchar(20) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="姓名")
-   * @var string
+   * @param string $password
+   * @return AdminEntity
    */
-  private string $name;
+  public function setPassword(string $password): self
+  {
+    $this->password = password_hash($password, PASSWORD_BCRYPT);
+    return $this;
+  }
+
   /**
-   * @DBType({"key": "UNI","type":"varchar(20) NULL DEFAULT NULL"})
-   * @OA\Property(description="电话")
-   * @var string
+   * @return int
    */
-  private string $tel;
+  public function getParentId(): int
+  {
+    return $this->parentId;
+  }
+
   /**
-   * @DBType({"type":"char(11) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="加密密钥")
-   * @var string
+   * @param int $parentId
+   * @return AdminEntity
    */
-  private string $salt;
+  public function setParentId(int $parentId): self
+  {
+    $this->parentId = $parentId;
+    return $this;
+  }
+
   /**
-   *
-   * @DBType({"type":"smallint(6) NOT NULL DEFAULT 0"})
-   * @OA\Property(description="角色")
-   * @var int
+   * @return string
    */
-  private int $role_id;
+  public function getOpenid(): string
+  {
+    return $this->openid;
+  }
+
   /**
-   *
-   * @DBType({"type":"smallint(6) NOT NULL DEFAULT 0"})
-   * @OA\Property(description="分组ID")
-   * @var int
+   * @param string $openid
+   * @return AdminEntity
    */
-  private int $groupId;
+  public function setOpenid(string $openid): self
+  {
+    $this->openid = $openid;
+    return $this;
+  }
+
   /**
-   * @DBType({"type":"char(10) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="最后登录时间")
-   * @var int
+   * @return string
    */
-  private int $lastLoginTime;
+  public function getName(): string
+  {
+    return $this->name;
+  }
+
   /**
-   * @DBType({"type":"char(15) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="最后登录IP")
-   * @var string
+   * @param string $name
+   * @return AdminEntity
    */
-  private string $lastLoginIp;
+  public function setName(string $name): self
+  {
+    $this->name = $name;
+    return $this;
+  }
+
   /**
-   * @DBType({"type":"char(10) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="最后修改密码")
-   * @var string
+   * @return string
    */
-  private string $lastEditPwd;
+  public function getTel(): string
+  {
+    return $this->tel;
+  }
+
   /**
-   * @DBType({"type":"char(1) NOT NULL DEFAULT '0'"})
-   * @OA\Property(description="帐号状态")
-   * @var integer
+   * @param string $tel
    */
-  private int $status;
+  public function setTel(string $tel): self
+  {
+    $this->tel = $tel;
+    return $this;
+  }
+
   /**
-   *
-   * @DBType({"type":"char(10) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="创建时间")
-   * @var integer
+   * @return int
    */
-  private int $ctime;
+  public function getRoleId(): int
+  {
+    return $this->role_id;
+  }
+
+  /**
+   * @param int $role_id
+   */
+  public function setRoleId(int $role_id): self
+  {
+    $this->role_id = $role_id;
+    return $this;
+  }
+
+  /**
+   * @return int
+   */
+  public function getGroupId(): int
+  {
+    return $this->groupId;
+  }
+
+  /**
+   * @param int $groupId
+   * @return AdminEntity
+   */
+  public function setGroupId(int $groupId): self
+  {
+    $this->groupId = $groupId;
+    return $this;
+  }
+
+  /**
+   * @return int
+   */
+  public function getLastLoginTime(): int
+  {
+    return $this->lastLoginTime;
+  }
+
+  /**
+   * @param int $lastLoginTime
+   * @return AdminEntity
+   */
+  public function setLastLoginTime(int $lastLoginTime): self
+  {
+    $this->lastLoginTime = $lastLoginTime;
+    return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLastLoginIp(): string
+  {
+    return $this->lastLoginIp;
+  }
+
+  /**
+   * @param string $lastLoginIp
+   * @return AdminEntity
+   */
+  public function setLastLoginIp(string $lastLoginIp): self
+  {
+    $this->lastLoginIp = $lastLoginIp;
+    return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLastEditPwd(): string
+  {
+    return $this->lastEditPwd;
+  }
+
+  /**
+   * @param string $lastEditPwd
+   * @return AdminEntity
+   */
+  public function setLastEditPwd(string $lastEditPwd): self
+  {
+    $this->lastEditPwd = $lastEditPwd;
+    return $this;
+  }
+
+  /**
+   * @return int
+   */
+  public function getStatus(): int
+  {
+    return $this->status;
+  }
+
+  /**
+   * @param int $status
+   * @return AdminEntity
+   */
+  public function setStatus(int $status): self
+  {
+    $this->status = $status;
+    return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getCreatedAt(): string
+  {
+    return $this->createdAt;
+  }
+
+  /**
+   * @param string $createdAt
+   * @return AdminEntity
+   */
+  public function setCreatedAt(string $createdAt): self
+  {
+    $this->createdAt = $createdAt;
+    return $this;
+  }
+
 }

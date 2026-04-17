@@ -1,0 +1,79 @@
+<div data-page="app.client" class="card" hx-get="{{ url_for('app.client') }}" hx-trigger="refresh-page from:body"
+     hx-target="this" hx-swap="outerHTML">
+  <div class="card-header">
+    <h3 class="card-title">{{ title }}</h3>
+
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool open-modal"
+              hx-get="{{ url_for('app.client.add') }}"
+              hx-target="body"
+              hx-swap="beforeend"
+              hx-select="unset"
+              hx-disabled-elt="this"
+              data-modal-name="app.client.modal"
+              data-modal-size="lg"
+              data-modal-backdrop="static"
+              data-bs-toggle="tooltip" data-bs-title="添加客户端">
+        <i class="fas fa-plus-circle"></i>添加
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <table class="table table-sm table-bordered table-hover nowrap">
+      <thead>
+      <tr>
+        <th>客户端</th>
+        <th>APPID</th>
+        <th>密钥</th>
+        <th>回调地址</th>
+        <th>客户端授权IP</th>
+        <th>授权范围</th>
+        <th>操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for client in clients %}
+        <tr class="align-middle">
+          <td>{{ client.name }}</td>
+          <td>{{ client.client_id }}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" data-bs-title="重置"
+                    hx-patch="{{ url_for('app.client.resetSecret',{id:client.id}) }}"
+                    hx-disabled-elt="this"
+                    hx-confirm="是否确认要重置密钥，重置后之前的密钥将失效?"
+                    hx-swap="none">
+              <i class="fa-solid fa-arrow-rotate-right"></i>
+            </button>
+          </td>
+          <td>{{ client.redirect_uri }}</td>
+          <td>{{ client.client_ip | join("\n") | nl2br }}</td>
+          <td>{{ client.scopes | join("\n") | nl2br }}</td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-title="修改"
+                      hx-get="{{ url_for('app.client.edit',{id:client.id}) }}"
+                      hx-target="body"
+                      hx-swap="beforeend"
+                      hx-select="unset"
+                      data-modal-name="app.client.modal"
+                      data-modal-size="lg"
+                      data-modal-backdrop="static">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-title="删除"
+                      hx-delete="{{ url_for('app.client.delete',{id:client.id}) }}"
+                      hx-disabled-elt="this"
+                      hx-confirm="是否确认要删除客户端?"
+                      hx-swap="none" hx-headers='{"Hx-Trigger": "refresh-page"}'>
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->

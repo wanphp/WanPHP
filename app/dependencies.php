@@ -1,64 +1,93 @@
 <?php
 declare(strict_types=1);
 
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use DI\ContainerBuilder;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\StreamHandler;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Wanphp\Libray\Mysql\Database;
-use Wanphp\Libray\Slim\Setting;
+use Psr\SimpleCache\CacheInterface;
+use Symfony\Component\Cache\Psr16Cache;
+use WanPHP\Core\Database\EntityManager;
+use WanPHP\Core\Factory\RedisCacheFactory;
+use WanPHP\Core\Factory\RepositoryFactory;
+use WanPHP\Core\Worker\RedisStream;
 
 
 return function (ContainerBuilder $containerBuilder) {
-  $containerBuilder->addDefinitions([
-    LoggerInterface::class => function (ContainerInterface $c) {
-      $settings = $c->get(Setting::class);
+  $definitions = [
+    LoggerInterface::class => function () {
+      $logPath = ROOT_PATH . (getenv('APP_LOG_PATH') ?: '/var/logs/app');
+      if (!is_dir($logPath)) mkdir($logPath, 0755, true);
 
-      $loggerSettings = $settings->get('logger');
-      $logger = new Logger($loggerSettings['name']);
+      $logger = new Logger('slim-app');
       $logger->pushProcessor(new UidProcessor());
-      if (!is_dir($loggerSettings['path'])) mkdir($loggerSettings['path'], 0755, true);
-      $handler = new StreamHandler($loggerSettings['path'] . DIRECTORY_SEPARATOR . date('Ymd') . '.log', $loggerSettings['level']);
-      $handler->setFormatter(new LineFormatter("[%datetime%][%channel%] %level_name%: %message% %context% %extra%\n", "Y-m-d H:i:s"));
-      $logger->pushHandler($handler);
-      // 记录系统操作日志
-      $logger->pushHandler(new \App\Application\Handlers\LogHandler($c->get(\App\Domain\Common\LogsInterface::class), 600));
+
+      $lineFormatter = new LineFormatter("[%datetime%] %level_name%: %message% %context% %extra%\n");
+
+      // debug.log — (DEBUG, INFO)
+      $debugHandler = new RotatingFileHandler("$logPath/debug.log", 7, Logger::DEBUG, false);
+      // app.log — (NOTICE, WARNING)
+      $appHandler = new RotatingFileHandler("$logPath/app.log", 7, Logger::NOTICE, false);
+      // error.log — (ERROR+)
+      $errorHandler = new RotatingFileHandler("$logPath/error.log", 7, Logger::ERROR, false);
+
+      $debugHandler->setFormatter($lineFormatter);
+      $appHandler->setFormatter($lineFormatter);
+      $errorHandler->setFormatter($lineFormatter);
+
+      $logger->pushHandler($debugHandler);
+      $logger->pushHandler($appHandler);
+      $logger->pushHandler($errorHandler);
 
       return $logger;
     },
-    Database::class => function (ContainerInterface $c) {
-      $config = $c->get(Setting::class)->get('database');
-      try {
-        $db = new Database($config);
-      } catch (\Exception $e) {
-        if (strpos($e->getMessage(), '[1049]')) {//数据库不存在，创建数据库,
-          $database = $config['database_name'];
-          $config['database_name'] = 'mysql';
-          $db = new Database($config);
-          //创建数据库
-          $db->query("CREATE DATABASE IF NOT EXISTS `$database` default charset {$config['charset']} COLLATE {$config['charset']}_general_ci;");
-          $db->query("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON `{$database}`.* TO 'webuser_rw'@'%';");
-          $db->query("USE `{$database}`;");
-        } else {
-          throw $e;
-        }
+    EntityManager::class => function (RepositoryFactory $repositoryFactory) {
+      return new WanPHP\Core\Database\EntityManager([
+        'database_type' => getenv('DATABASE_TYPE'),
+        'database_name' => getenv('DATABASE_NAME'),
+        'server' => getenv('DATABASE_SERVER'),
+        'username' => getenv('DATABASE_USER'),
+        'password' => getenv('DATABASE_USER_PASSWORD'),
+
+        'charset' => getenv('DATABASE_CHARSET'),
+        'port' => getenv('DATABASE_PORT'),
+        'prefix' => getenv('DATABASE_TABLE_PREFIX'),
+        'logging' => getenv('DATABASE_LOGGING') === 'true',//启用日志
+        'option' => [PDO::ATTR_CASE => PDO::CASE_NATURAL],
+        'command' => ['SET SQL_MODE=ANSI_QUOTES'],
+        'error' => PDO::ERRMODE_SILENT
+      ], $repositoryFactory);
+    },
+    // 注册Redis
+    RedisCacheFactory::class => function () {
+      if (getenv('REDIS_HOST') && getenv('REDIS_PORT') && getenv('REDIS_PASSWORD')) {
+        return new RedisCacheFactory(getenv('REDIS_HOST'), (int)getenv('REDIS_PORT'), getenv('REDIS_PASSWORD'));
       }
-      return $db;
-    }
-  ]);
-  // 资源服务器，获取授权服务器用户信息
-  if (class_exists('\Wanphp\Libray\User\User')) {
-    $containerBuilder->addDefinitions([
-      \Wanphp\Libray\Slim\WpUserInterface::class => \DI\autowire(\Wanphp\Libray\User\User::class)
-    ]);
-  }
-  // 授权服务器
-  if (class_exists('\Wanphp\Plugins\Weixin\Repositories\UserRepository')) {
-    $containerBuilder->addDefinitions([
-      \Wanphp\Libray\Slim\WpUserInterface::class => \DI\autowire(\Wanphp\Plugins\Weixin\Repositories\UserRepository::class)
-    ]);
-  }
+      return null;
+    },
+    // 注册缓存
+    CacheInterface::class => function (RedisCacheFactory $redisCacheFactory) {
+      return new Psr16Cache($redisCacheFactory->create((int)getenv('REDIS_DEFAULT_DB')));
+    },
+    // redis队列
+    RedisStream::class => function () {
+      $redis = new Redis();
+      $redis->connect(getenv('REDIS_HOST'), (int)getenv('REDIS_PORT'));
+      $redis->auth(getenv('REDIS_PASSWORD'));
+      $redis->select((int)getenv('QUEUE_REDIS_DB'));
+      return new RedisStream($redis);
+    },
+    // 生成二维码
+    Writer::class => function () {
+      $renderer = new ImageRenderer(new RendererStyle(480, 1), new SvgImageBackEnd());
+      return new Writer($renderer);
+    },
+  ];
+  $containerBuilder->addDefinitions($definitions);
 };

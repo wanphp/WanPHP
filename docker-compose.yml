@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 networks:
   backend:
@@ -10,8 +10,7 @@ services:
     # 依赖php服务，意味着在启动nginx之前先启动php
     depends_on:
       - php-fpm
-    # nginx镜像的路径
-    image: registry.cn-shenzhen.aliyuncs.com/yxyong/nginx
+    #image: wanphp/nginx
     volumes:
       - ./:/var/www:cached
       - ./var/logs/nginx:/var/log/nginx
@@ -33,10 +32,8 @@ services:
       - backend
 
   php-fpm:
-    depends_on:
-      - mysql
-      - redis
-    image: registry.cn-shenzhen.aliyuncs.com/yxyong/php
+    #image: wanphp/php
+    build: ./docker/php
     restart: always
     logging:
       driver: json-file
@@ -45,26 +42,43 @@ services:
     volumes:
       - ./:/var/www:cached
     container_name: php-fpm-slim
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - backend
 
   mysql:
-    image: registry.cn-shenzhen.aliyuncs.com/yxyong/mysql
+    #image: wanphp/mysql
+    build: ./docker/mysql
     volumes:
       - ./var/data/mysql:/var/lib/mysql
+      - ./var/logs/mysql:/var/log/mysql
+      - ./var/backup/mysql:/backup
     restart: always
-    # 设置MYSQL_ROOT_PASSWORD环境变量，这里是设置mysql的root密码。这里为root。
     environment:
-      MYSQL_ROOT_PASSWORD: wanphp#1122
-      TZ: PRC
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_USER_PASSWORD: ${DATABASE_USER_PASSWORD}
+      DATABASE_ADMIN_PASSWORD: ${DATABASE_ADMIN_PASSWORD}
+      DATABASE_RO_PASSWORD: ${DATABASE_RO_PASSWORD}
     #ports:
     #  - "13306:3306"
     container_name: mysql-slim
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - backend
 
   redis:
-    image: registry.cn-shenzhen.aliyuncs.com/yxyong/redis
+    #image: wanphp/redis
+    build: ./docker/redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - ./var/data/redis:/data
     restart: always
@@ -74,9 +88,25 @@ services:
     networks:
       - backend
 
+  worker:
+    #image: wanphp/php_worker:latest
+    build: ./docker/worker
+    container_name: log-worker
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: php bin/worker.php audit
+    restart: always
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - backend
+
+
   composer:
     image: composer:latest
-    command: ["composer", "update" ]
+    command: [ "composer", "update" ]
     container_name: composer-slim
     volumes:
       - ./:/app

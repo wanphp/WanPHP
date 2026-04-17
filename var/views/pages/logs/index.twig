@@ -1,0 +1,16 @@
+<div data-page="app.audit.logs" class="card">
+  <div class="card-header">
+    <h3 class="card-title">{{title}}</h3>
+
+    <div class="card-tools">
+      <button id="selectDate" type="button" data-toggle="datetimepicker" class="btn btn-tool">
+        <i class="fas fa-calendar" data-bs-toggle="tooltip" data-bs-title="选择日期"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <table id="logs-table" data-action="{{ url_for('app.audit.logs') }}" class="table table-sm table-bordered"></table>
+  </div>
+  <!-- /.card-body -->
+</div>
+<!-- /.card -->

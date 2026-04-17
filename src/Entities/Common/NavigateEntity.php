@@ -9,44 +9,101 @@
 namespace App\Entities\Common;
 
 
-use Wanphp\Libray\Mysql\EntityTrait;
+use Doctrine\DBAL\Types\Types;
+use OpenApi\Attributes as OA;
+use WanPHP\Core\Attribute\Column;
+use WanPHP\Core\Attribute\DataTable;
+use WanPHP\Core\Traits\EntityArrayTrait;
 
-/**
- * Class Navigate
- * @package App\Entities\Common
- * @OA\Schema(
- *   title="系统导航",
- *   description="系统导航数据结构",
- *   required={"icon","name"}
- * )
- */
-class NavigateEntity implements \JsonSerializable
+#[DataTable(name: 'sys_navigate', required: ["icon", "name"])]
+#[OA\Schema(title: "系统导航", description: "系统导航菜单", required: ["icon", "name"])]
+class NavigateEntity
 {
-  use EntityTrait;
+  use EntityArrayTrait;
+
+  #[Column(type: Types::SMALLINT, autoIncrement: true, primary: true)]
+  #[OA\Property(description: "主键ID")]
+  private ?int $id;
+  #[Column(type: Types::STRING, length: 30)]
+  #[OA\Property(description: "图标样式", type: "string")]
+  private string $icon;
+  #[Column(type: Types::STRING, length: 30,unique: true)]
+  #[OA\Property(description: "导航名称", type: "string")]
+  private string $name;
+  #[Column(type: Types::STRING, length: 3)]
+  #[OA\Property(description: "排序", type: "integer")]
+  private int $sortOrder;
 
   /**
-   * 主键
-   * @DBType({"key": "PRI","type":"tinyint(4) NOT NULL AUTO_INCREMENT"})
-   * @OA\Property(format="int32", description="ID")
-   * @var integer|null
+   * @return int|null
    */
-  private ?int $id;
+  public function getId(): ?int
+  {
+    return $this->id;
+  }
+
   /**
-   * @DBType({"key": "","type":"varchar(30) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="图标样式")
-   * @var string
+   * @param int|null $id
+   * @return NavigateEntity
    */
-  private string $icon;
+  public function setId(?int $id): self
+  {
+    $this->id = $id;
+    return $this;
+  }
+
   /**
-   * @DBType({"key": "","type":"varchar(20) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="导航名称")
-   * @var string
+   * @return string
    */
-  private string $name;
+  public function getIcon(): string
+  {
+    return $this->icon;
+  }
+
   /**
-   * @DBType({"key": "","type":"tinyint(4) NOT NULL DEFAULT '0'"})
-   * @OA\Property(description="排序")
-   * @var integer
+   * @param string $icon
+   * @return NavigateEntity
    */
-  private int $sortOrder;
+  public function setIcon(string $icon): self
+  {
+    $this->icon = $icon;
+    return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getName(): string
+  {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   * @return NavigateEntity
+   */
+  public function setName(string $name): self
+  {
+    $this->name = $name;
+    return $this;
+  }
+
+  /**
+   * @return int
+   */
+  public function getSortOrder(): int
+  {
+    return $this->sortOrder;
+  }
+
+  /**
+   * @param int $sortOrder
+   * @return NavigateEntity
+   */
+  public function setSortOrder(int $sortOrder): self
+  {
+    $this->sortOrder = $sortOrder;
+    return $this;
+  }
+
 }

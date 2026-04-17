@@ -1,0 +1,61 @@
+<nav class="app-header navbar navbar-expand bg-body">
+  <!--begin::Container-->
+  <div class="container-fluid">
+    <!--begin::Start Navbar Links-->
+    <ul class="navbar-nav">
+      <li class="nav-item"><a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+          <i class="fa-solid fa-bars"></i>
+        </a></li>
+      <li class="nav-item">
+        <a href="javascript:" data-page-name="app.dashboard" hx-get="{{ url_for('app.dashboard') }}"
+           hx-target="#app-content" hx-push-url="true" class="nav-link">
+          <i class="fas fa-home d-inline-block d-md-none"></i><span class="d-none d-md-inline-block"> 首页</span>
+          </a>
+      </li>
+      {% if Role<0 %}
+        <li class="nav-item d-none d-md-block">
+          <a href="javascript:" data-page-name="app.permission" hx-get="{{ url_for('app.permission') }}" hx-target="#app-content" hx-push-url="true"
+             class="nav-link">权限</a>
+        </li>
+      {% endif %}
+    </ul>
+    <!--end::Start Navbar Links-->
+    <!--begin::End Navbar Links-->
+    <ul class="navbar-nav ms-auto">
+      {% block headnavsearch %}
+        <!--begin::Navbar Search-->
+        <li class="nav-item">
+          <a class="nav-link" data-widget="navbar-search" href="#" role="button">
+            <i class="fas fa-search"></i>
+          </a>
+        </li>
+        <!--end::Navbar Search-->
+      {% endblock %}
+      <!--begin::Messages Dropdown Menu-->
+      {% block messages %}{% endblock %}
+      <!--end::Messages Dropdown Menu-->
+      <!--begin::Notifications Dropdown Menu-->
+      {% block notifications %}{% endblock %}
+      <!--end::Notifications Dropdown Menu-->
+      <!--begin::Fullscreen Toggle-->
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:" data-lte-toggle="fullscreen">
+          <i data-lte-icon="maximize" class="fa-solid fa-expand" style="line-height: unset"></i>
+          <i data-lte-icon="minimize" class="fa-solid fa-compress" style="display: none;line-height: unset"></i>
+        </a>
+      </li>
+      <!--end::Fullscreen Toggle-->
+      <!--begin::User Menu Dropdown-->
+
+      <!--end::User Menu Dropdown-->
+      <li class="nav-item">
+        <a class="nav-link" hx-get="{{ url_for('app.clearCache') }}" hx-swap="none" href="javascript:"><i class="fas fa-broom"></i> </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('app.loginOut') }}"><i class="fas fa-sign-out-alt"></i><span class="d-none d-md-inline-block"> 退出</span></a>
+      </li>
+    </ul>
+    <!--end::End Navbar Links-->
+  </div>
+  <!--end::Container-->
+</nav>

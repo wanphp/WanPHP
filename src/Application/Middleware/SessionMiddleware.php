@@ -3,48 +3,42 @@ declare(strict_types=1);
 
 namespace App\Application\Middleware;
 
-use Defuse\Crypto\Crypto;
-use Defuse\Crypto\Exception\BadFormatException;
-use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
-use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
-use Defuse\Crypto\Key;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class SessionMiddleware implements Middleware
 {
-  private Key $key;
-  private string $sessionName;
 
   /**
-   * @param $key
+   * @param CacheInterface $cache
    * @param $sessionName
-   * @throws BadFormatException
-   * @throws EnvironmentIsBrokenException
    */
-  public function __construct($key, $sessionName)
+  public function __construct(private readonly CacheInterface $cache, private $sessionName)
   {
-    $this->key = Key::loadFromAsciiSafeString($key);
-    $this->sessionName = $sessionName;
   }
 
   /**
    * @param Request $request
    * @param RequestHandler $handler
    * @return Response
-   * @throws EnvironmentIsBrokenException
-   * @throws WrongKeyOrModifiedCiphertextException
    */
   public function process(Request $request, RequestHandler $handler): Response
   {
-    $queryParams = $request->getQueryParams();
-    $ssiToken = $request->getHeaderLine('Wps') ?: ($queryParams['tk'] ?? '');
+    $ssiToken = $request->getHeaderLine('X-Wps') ?: ($request->getQueryParams()['tk'] ?? '');
     if ($ssiToken != '') {
-      $session_id = Crypto::decrypt($ssiToken, $this->key);
-      if ($session_id) session_id($session_id);
-      //session_set_cookie_params(600, '/');
+      try {
+        $session_id = $this->cache->get($ssiToken);
+        if ($session_id) session_id($session_id);
+        //session_set_cookie_params(600, '/');
+      } catch (InvalidArgumentException $e) {
+        $response = new \Slim\Psr7\Response();
+        $response->getBody()->write('Invalid request!' . $e->getMessage());
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(403);
+      }
     }
     if ($this->sessionName) session_name($this->sessionName);
     session_start();

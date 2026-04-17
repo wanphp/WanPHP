@@ -2,11 +2,13 @@
 declare(strict_types=1);
 
 use App\Application\Middleware\PermissionMiddleware;
+use App\Service\Common\PersistenceService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
-use Slim\Interfaces\RouteCollectorProxyInterface as Group;
-use Wanphp\Plugins\Weixin\Application\OAuthServerMiddleware;
+use WanPHP\Core\Attribute\Route;
+use WanPHP\Core\Factory\ClassScannerFactory;
+use WanPHP\Core\Middleware\AdminPermissionMiddlewareInterface;
 
 return function (App $app) {
   $app->options('/{routes:.*}', function (Request $request, Response $response) {
@@ -14,48 +16,129 @@ return function (App $app) {
     return $response;
   });
 
-  $PermissionMiddleware = new PermissionMiddleware($app->getContainer());
-  $OAuthServerMiddleware = new OAuthServerMiddleware(
-    $app->getContainer()->get(\Wanphp\Libray\Slim\Setting::class)->get('oauth2Config'),
-    $app->getContainer()->get(\Wanphp\Libray\Slim\Setting::class)->get('AuthCodeStorage')
-  );
+  $cacheFile = ROOT_PATH . '/var/cache/routes.cache.php';
+  $cachedRoutes = [];
 
-  // 加载组件
-  foreach (glob(ROOT_PATH . '/wanphp/components/*/src/routes.php') as $filename) {
-    $routes = require $filename;
-    $routes($app, $PermissionMiddleware, $OAuthServerMiddleware);
+  if (getenv('APP_ENV') === 'prod' && file_exists($cacheFile)) {
+    // 缓存命中：直接加载缓存文件
+    $cachedRoutes = require $cacheFile;
+    // 确保加载的是数组，防止文件损坏导致意外
+    if (!is_array($cachedRoutes)) {
+      $cachedRoutes = []; // 重置并继续到生成逻辑
+    }
   }
-  // 加载插件
-  foreach (glob(ROOT_PATH . '/wanphp/plugins/*/src/routes.php') as $filename) {
-    $routes = require $filename;
-    $routes($app, $PermissionMiddleware, $OAuthServerMiddleware);
+
+  if (empty($cachedRoutes)) {
+    $paths = [
+      ROOT_PATH . '/src/Application/Actions',
+      ROOT_PATH . '/src/Application/Api'
+    ];
+    // Single Page Application
+    if (file_exists(ROOT_PATH . '/src/Application/Spa')) $paths[] = ROOT_PATH . '/src/Application/Spa';
+    // 服务端设置了私钥，添加路由
+    if (getenv('OAUTH2_PRIVATE_KEY')) $paths[] = ROOT_PATH . '/vendor/wanphp/core/src/AuthAction';
+
+    $actionPath = glob(ROOT_PATH . '/wanphp/plugins/*/src/Application', GLOB_ONLYDIR);
+    if ($actionPath) $paths = array_merge($paths, $actionPath);
+
+    // 权限
+    $permissions = [];
+    // 扫描 Action 目录
+    $classes = ClassScannerFactory::scanDirectories($paths);
+    foreach ($classes as $className) {
+      $reflection = new ReflectionClass($className);
+      if (!$reflection->isInstantiable()) continue;
+
+      $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
+      if ($reflection->hasMethod('action')) $methods[] = $reflection->getMethod('action');
+      foreach ($methods as $method) {
+        foreach ($method->getAttributes(Route::class) as $attr) {
+          /** @var Route $route */
+          $route = $attr->newInstance();
+
+          // 确保 Route 对象有 path 属性，否则跳过
+          if (!$route->path) continue;
+
+          // 构建要缓存的数据结构
+          $callable = $method->getName() === 'action' ? $className : $className . ':' . $method->getName();
+          $routeEntry = [
+            'path' => $route->path,
+            'methods' => $route->methods,
+            'callable' => $callable,
+            'name' => $route->name ?? null,
+            'description' => $route->description ?? null,
+            'isNav' => $route->isNav ?? false,
+            'middleware' => [],
+          ];
+
+          // 缓存中间件类名
+          foreach ($route->middleware as $mwClass) {
+            if (is_string($mwClass)) {
+              if (class_exists($mwClass) || interface_exists($mwClass)) {
+                $routeEntry['middleware'][] = $mwClass;
+                if ($mwClass == PermissionMiddleware::class || $mwClass == AdminPermissionMiddlewareInterface::class) {
+                  $permissions[] = $routeEntry;
+                }
+              }
+            } elseif (is_array($mwClass) && isset($mwClass[0])) {
+              $class = $mwClass[0];
+              $params = $mwClass[1] ?? [];
+
+              if (class_exists($class)) {
+                $routeEntry['middleware'][] = [$class, $params];
+              }
+            }
+          }
+
+          $cachedRoutes[] = $routeEntry;
+        }
+      }
+    }
+    // 写入缓存文件
+    if (!file_exists($cacheFile) && !empty($cachedRoutes)) {
+      // 确保缓存目录存在
+      $cacheDir = dirname($cacheFile);
+      if (!is_dir($cacheDir)) {
+        mkdir($cacheDir, 0755, true);
+      }
+
+      // 使用 var_export 确保生成合法的 PHP 数组文件
+      $content = "<?php\n\nreturn " . var_export($cachedRoutes, true) . ";\n";
+      file_put_contents($cacheFile, $content);
+      // 权限写入到数据库
+      $permissionService = $app->getContainer()->get(PersistenceService::class);
+      $permissionService->syncRoutes($permissions);
+    }
   }
-  //公众号
-  $app->map(['GET', 'POST'], '/weixin', \App\Application\Api\Weixin\WePublic::class);
 
-  $app->map(['GET', 'POST'], '/login', \App\Application\Actions\Common\LoginAction::class);
-  $app->map(['GET', 'POST'], '/qrLogin', \App\Application\Actions\Common\QrLoginAction::class);
-  $app->get('/loginOut', \App\Application\Actions\Common\LoginOutAction::class);
-  $app->get('/clearCache', \App\Application\Actions\Common\ClearCacheAction::class);
+  // 遍历缓存或新生成的路由，注册到 Slim App
+  foreach ($cachedRoutes as $route) {
+    // 注册 Slim 路由
+    $r = $app->map($route['methods'], $route['path'], $route['callable']);
 
-  $app->get('/', \App\Application\Actions\Home\HomeAction::class)->addMiddleware($PermissionMiddleware);
-  $app->group('/admin', function (Group $group) {
-    $group->get('/dashboard', \App\Application\Actions\Home\DashboardAction::class);
-    $group->get('/actions', \App\Application\Actions\Permission\ListRouterAction::class);
-    $group->get('/syncActions', \App\Application\Actions\Common\SyncRouterAction::class);
-    $group->patch('/router/{id:[0-9]+}', \App\Application\Actions\Common\RouterAction::class);
-    $group->map(['GET', 'PUT', 'POST', 'DELETE'], '/navigate[/{id:[0-9]+}]', \App\Application\Actions\Common\NavigateAction::class);
-    $group->map(['GET', 'PUT', 'POST', 'DELETE'], '/setting[/{id:[0-9]+}]', \App\Application\Actions\Common\SettingAction::class);
-    $group->map(['GET', 'POST'], '/editPassword', \App\Application\Actions\Admin\AdminInfoAction::class);
-    $group->map(['GET', 'POST'], '/userBind', \App\Application\Actions\Admin\UserBindAction::class);
-    $group->get('/userUnBind', \App\Application\Actions\Admin\UserBindAction::class . ':unBind');
-    $group->map(['GET', 'PUT', 'POST', 'DELETE'], '/admins[/{id:[0-9]+}]', \App\Application\Actions\Admin\AdminAction::class);
-    $group->map(['GET', 'PUT', 'POST', 'DELETE'], '/roles[/{id:[0-9]+}]', \App\Application\Actions\Admin\RoleAction::class);
-    $group->map(['GET', 'PUT', 'POST', 'DELETE'], '/group[/{id:[0-9]+}]', \App\Application\Actions\Admin\GroupAction::class);
-    // 系统操作日志
-    $group->get('/logs', \App\Application\Actions\Common\LogsAction::class);
+    // 设置路由名
+    if ($route['name']) {
+      $r->setName($route['name']);
+    }
 
-    //文件上传
-    $group->map(['GET', 'PUT', 'POST', 'DELETE'], '/files[/{id:[0-9]+}]', \App\Application\Api\Common\FilesApi::class);
-  })->addMiddleware($PermissionMiddleware);
+    // 添加中间件,在这里实例化中间件
+    if (!empty($route['middleware'])) {
+      foreach ($route['middleware'] as $mw) {
+        if (is_string($mw)) {
+          $middlewareInstance = $app->getContainer()->get($mw);
+          $r->add($middlewareInstance);
+          continue;
+        }
+
+        if (is_array($mw)) {
+          [$class, $params] = $mw;
+
+          if (!is_array($params)) {
+            $params = [$params];
+          }
+          $r->add(new $class(...$params));
+        }
+      }
+    }
+  }
 };

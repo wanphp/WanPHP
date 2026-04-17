@@ -9,37 +9,80 @@
 namespace App\Entities\Admin;
 
 
-use Wanphp\Libray\Mysql\EntityTrait;
+use Doctrine\DBAL\Types\Types;
+use OpenApi\Attributes as OA;
+use WanPHP\Core\Attribute\Column;
+use WanPHP\Core\Attribute\DataTable;
+use WanPHP\Core\Traits\EntityArrayTrait;
 
-/**
- * Class RoleEntity
- * @package App\Entities\Admin
- * @OA\Schema(
- *   title="系统管理角色",
- *   description="系统管理角色数据结构",
- *   required={"name"}
- * )
- */
-class RoleEntity implements \JsonSerializable
+#[DataTable(name: 'admin_role', required: ["name"])]
+#[OA\Schema(title: "管理员角色", description: "系统管理角色", required: ["name"])]
+class RoleEntity
 {
-  use EntityTrait;
+  use EntityArrayTrait;
+
+  #[Column(type: Types::SMALLINT, autoIncrement: true, primary: true)]
+  #[OA\Property(description: "管理角色ID")]
+  private ?int $id;
+  #[Column(type: Types::STRING, length: 20, unique: true)]
+  #[OA\Property(description: "角色名称", type: "string")]
+  private string $name;
+  #[Column(type: Types::JSON)]
+  #[OA\Property(description: "未授权范围", type: "array", items: new OA\Items(description: '权限', type: "string"))]
+  private array $scopes;
 
   /**
-   * @DBType({"key":"PRI","type":"tinyint(4) NOT NULL AUTO_INCREMENT"})
-   * @OA\Property(format="int32", description="ID")
-   * @var integer|null
+   * @return int|null
    */
-  private ?int $id;
+  public function getId(): ?int
+  {
+    return $this->id;
+  }
+
   /**
-   * @DBType({"type":"varchar(20) NOT NULL DEFAULT ''"})
-   * @OA\Property(description="角色名称")
-   * @var string
+   * @param int|null $id
+   * @return RoleEntity
    */
-  private string $name;
+  public function setId(?int $id): self
+  {
+    $this->id = $id;
+    return $this;
+  }
+
   /**
-   * @DBType({"type":"json NULL"})
-   * @OA\Property(@OA\Items(),description="限制权限")
-   * @var array
+   * @return string
    */
-  private array $restricted;
+  public function getName(): string
+  {
+    return $this->name;
+  }
+
+  /**
+   * @param string $name
+   * @return RoleEntity
+   */
+  public function setName(string $name): self
+  {
+    $this->name = $name;
+    return $this;
+  }
+
+  /**
+   * @return array
+   */
+  public function getScopes(): array
+  {
+    return $this->scopes;
+  }
+
+  /**
+   * @param array $scopes
+   * @return RoleEntity
+   */
+  public function setScopes(array $scopes): self
+  {
+    $this->scopes = $scopes;
+    return $this;
+  }
+
 }

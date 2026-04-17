@@ -1,0 +1,50 @@
+<aside class="app-sidebar bg-body-secondary shadow-sm">
+  <!--begin::Sidebar Brand-->
+  <div class="sidebar-brand">
+    <a href="javascript:" class="brand-link"
+       hx-get="{{ url_for('app.admin.edit.password') }}"
+       hx-target="body"
+       hx-swap="beforeend"
+       hx-select="unset"
+       data-modal-name="app.admin.edit.password"
+       data-modal-backdrop="static">
+      <img src="{{ loginUser.avatar ?: '/assets/images/logo.png' }}" alt="{{ loginUser.name }}"
+           class="brand-image rounded-5 shadow">
+      <span class="brand-text fw-light">{{ loginUser.name ?: '系统管理' }}</span>
+    </a>
+    <!--end::Brand Link-->
+  </div>
+  <!--end::Sidebar Brand-->
+  <!--begin::Sidebar Wrapper-->
+  <div class="sidebar-wrapper">
+    <nav class="mt-2">
+      <!--begin::Sidebar Menu-->
+      <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="listbox"
+          aria-label="Main navigation" data-accordion="false" id="navigation">
+        {% for index, item in sidebar %}
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="nav-icon {{ item.icon }}"></i>
+              <p>{{ item.name }}<i class="nav-arrow fas fa-angle-right"></i></p>
+            </a>
+            {% if item.children %}
+              <ul class="nav nav-treeview">
+                {% for nav in item.children %}
+                  <li class="nav-item">
+                    <a href="javascript:" data-page-name="{{ nav.name }}" hx-get="{{ url_for(nav.name) }}"
+                       hx-target="#app-content" hx-push-url="true" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>{{ nav.description }}</p>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <!--end::Sidebar Menu-->
+    </nav>
+  </div>
+  <!--end::Sidebar Wrapper-->
+</aside>

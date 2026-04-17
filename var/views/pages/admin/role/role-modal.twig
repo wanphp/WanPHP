@@ -1,0 +1,42 @@
+{% extends "pages/common/modal.twig" %}
+
+{% block modal_body %}
+  <form hx-post="{{ action }}"
+        hx-swap="none" {# 我们手动处理响应，不需要 HTMX 自动替换内容 #}
+        class="needs-validation"
+        data-modal-form
+        data-reset {# 如果需要重置 #}
+        data-reload-datatable="admin-role-table" {# 对应你的 DataTable key #}
+        novalidate>
+    <div class="form-group pb-2">
+      <label for="name" class="form-label">角色名称</label>
+      <input id="name" name="name" value="{{ role.name }}" type="text" class="form-control" required placeholder="角色名称" autocomplete="off">
+      <div class="invalid-feedback">请填写角色名称</div>
+    </div>
+    <div class="row row-cols-2">
+      <div class="col">
+        <div class="form-group">
+          <label for="route" class="form-label text-success fw-bold">已授权的操作</label>
+          <select id="route" class="form-select" size="15">
+            {% for route in routes %}
+              <option value="{{ route.id }}">{{ route.description }}({{ route.path}})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label for="scopes" class="form-label text-danger fw-bold">未授权的操作</label>
+          <select id="scopes" multiple name="scopes[]" class="form-select" size="15">
+            {% for route in scopes %}
+              <option value="{{ route.id }}" selected>{{ route.description }}({{ route.path}})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="d-grid gap-2 d-md-flex mt-3 justify-content-md-end">
+      <button type="submit" class="btn btn-primary">提交</button>
+    </div>
+  </form>
+{% endblock %}

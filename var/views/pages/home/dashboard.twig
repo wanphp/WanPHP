@@ -1,0 +1,52 @@
+<div data-page="app.dashboard">
+  <div class="row"><!--begin::Col-->
+    <div class="col-lg-3 col-6"><!--begin::Small Box Widget 1-->
+      <div class="small-box text-bg-primary">
+        <div class="inner">
+          <h3>{{ newsCount }}</h3>
+          <p>昭通新闻网</p>
+        </div>
+        <i class="small-box-icon fas fa-newspaper"></i>
+        <a href="javascript:" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover"
+           data-page-name="app.news.article" hx-get="{{ url_for('app.news.article') }}" hx-target="#app-content" hx-push-url="true">
+          查看 <i class="fa fa-link"></i></a>
+      </div><!--end::Small Box Widget 1-->
+    </div><!--end::Col-->
+    <div class="col-lg-3 col-6"><!--begin::Small Box Widget 2-->
+      <div class="small-box text-bg-success">
+        <div class="inner">
+          <h3>{{ wxNewsCount }}</h3>
+          <p>昭通发布</p>
+        </div>
+        <i class="small-box-icon fab fa-weixin"></i>
+        <a href="javascript:" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover"
+           data-page-name="app.news.wx.article" hx-get="{{ url_for('app.news.wx.article') }}" hx-target="#app-content" hx-push-url="true">
+          查看 <i class="fa fa-link"></i></a>
+      </div><!--end::Small Box Widget 2-->
+    </div><!--end::Col-->
+    <div class="col-lg-3 col-6"><!--begin::Small Box Widget 3-->
+      <div class="small-box text-bg-warning">
+        <div class="inner">
+          <h3>{{ staffCount }}</h3>
+          <p>部门员工</p>
+        </div>
+        <i class="small-box-icon fas fa-users"></i>
+        <a href="javascript:" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover"
+           data-page-name="app.department" hx-get="{{ url_for('app.department') }}" hx-target="#app-content" hx-push-url="true">
+          查看 <i class="fa fa-link"></i></a>
+      </div><!--end::Small Box Widget 3-->
+    </div><!--end::Col-->
+    <div class="col-lg-3 col-6"><!--begin::Small Box Widget 4-->
+      <div class="small-box text-bg-danger">
+        <div class="inner">
+          <h3>{{ integralCount }}</h3>
+          <p>积分记录</p>
+        </div>
+        <i class="small-box-icon fas fa-database"></i>
+        <a href="javascript:" class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover"
+           data-page-name="app.integral.record" hx-get="{{ url_for('app.integral.record') }}" hx-target="#app-content" hx-push-url="true">
+          查看 <i class="fa fa-link"></i></a>
+      </div><!--end::Small Box Widget 4-->
+    </div><!--end::Col-->
+  </div><!--end::Row--><!--begin::Row-->
+</div>

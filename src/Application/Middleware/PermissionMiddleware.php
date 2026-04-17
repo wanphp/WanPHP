@@ -8,63 +8,49 @@
 
 namespace App\Application\Middleware;
 
-use App\Domain\Admin\AdminInterface;
-use App\Repositories\Mysql\Router\PersistenceRepository;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use App\Service\Admin\AdminService;
+use App\Service\Common\PersistenceService;
 use BaconQrCode\Writer;
-use Defuse\Crypto\Crypto;
-use Defuse\Crypto\Exception\BadFormatException;
-use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
-use Defuse\Crypto\Key;
 use Exception;
 use League\OAuth2\Server\Exception\OAuthServerException;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
+use Slim\Psr7\Response as SlimResponse;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
-use Wanphp\Libray\Slim\Setting;
-use Wanphp\Libray\Slim\WpUserInterface;
+use WanPHP\Core\Middleware\AdminPermissionMiddlewareInterface;
+use WanPHP\Core\Service\UserService;
+use WanPHP\Core\Worker\AuditLogContext;
 
-class PermissionMiddleware implements Middleware
+final readonly class PermissionMiddleware implements AdminPermissionMiddlewareInterface
 {
-  private PersistenceRepository $persistence;
-  private ContainerInterface $container;
-  private string $basePath = '';
-  private string $systemName = '';
-
   /**
-   * @param ContainerInterface $container
-   * @throws ContainerExceptionInterface
-   * @throws NotFoundExceptionInterface
+   * @param PersistenceService $persistence
+   * @param Writer $writer
+   * @param CacheInterface $cache
+   * @param AdminService $admin
+   * @param UserService $userService
    */
-  public function __construct(ContainerInterface $container)
+  public function __construct(
+    private PersistenceService $persistence,
+    private Writer             $writer,
+    private CacheInterface     $cache,
+    private AdminService       $admin,
+    private UserService        $userService
+  )
   {
-    $this->container = $container;
-    $this->persistence = $container->get(PersistenceRepository::class);
-    $this->basePath = $container->get(Setting::class)->get('basePath');
-    $this->systemName = $container->get(Setting::class)->get('systemName');
   }
 
   /**
    * @param Request $request
    * @param RequestHandler $handler
    * @return Response
-   * @throws BadFormatException
-   * @throws ContainerExceptionInterface
-   * @throws EnvironmentIsBrokenException
    * @throws LoaderError
-   * @throws NotFoundExceptionInterface
    * @throws RuntimeError
    * @throws SyntaxError
    * @throws Exception
@@ -77,26 +63,33 @@ class PermissionMiddleware implements Middleware
 
       if ($this->persistence->hasRestricted($routeContext->getRoute()->getCallable())) {
         if ($request->getHeaderLine("X-Requested-With") == "XMLHttpRequest") {
-          $response = new \Slim\Psr7\Response();
+          $response = new SlimResponse();
           $json = json_encode(['errMsg' => '用户未获得授权，操作被拒绝！'], JSON_PRETTY_PRINT);
           $response->getBody()->write($json);
           return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         } else {
-          return Twig::fromRequest($request)->render(new \Slim\Psr7\Response(), 'admin/error/404.html?loadTpl=1', ['message' => '用户未获得授权！']);
+          return Twig::fromRequest($request)->render(new SlimResponse(), 'admin/error/404.html?loadTpl=1', ['message' => '用户未获得授权！']);
         }
       }
+      $view = Twig::fromRequest($request);
+      $view->offsetSet('sidebar', $this->persistence->getSidebar());
+      // user info
+      $loginUser = $this->cache->get('userInfo_' . $_SESSION['login_id']);
+      if (empty($loginUser)) {
+        $loginUser = $this->admin->getColumn('name,tel,openid', ['id' => $_SESSION['login_id']]);
+        if (!empty($loginUser['openid'])) {
+          $user = $this->userService->getUser($loginUser['openid']);
+          if (!empty($user)) $loginUser = array_merge($user, $loginUser);
+        }
+        $this->cache->set('userInfo_' . $_SESSION['login_id'], $loginUser);
+      }
+      // 日志审计
+      AuditLogContext::markActor('admin', $_SESSION['login_id']);
 
-      $tplVars = [
-        'loginId' => $_SESSION['login_id'],
-        'Role' => $_SESSION['role_id'],
-        'basePath' => $this->basePath,
-        'thisUri' => $request->getUri()->getScheme() . '://' . $request->getUri()->getHost() . $this->basePath
-      ];
-      $request = $request->withAttribute('tplVars', $tplVars);
-      // 加载模板
-      $queryParams = $request->getQueryParams();
-      if (isset($queryParams['loadTpl']) && $request->getHeaderLine("X-Requested-With") == "XMLHttpRequest") $request = $request->withHeader('X-Requested-With', '');
-
+      $view->offsetSet('loginUser', $loginUser);
+      $view->offsetSet('systemName', getenv('APP_NAME'));
+      $view->offsetSet('loginId', $_SESSION['login_id']);
+      $view->offsetSet('Role', $_SESSION['role_id']);
       return $handler->handle($request);
     } else {
       // OAuth2.0 验证
@@ -108,65 +101,53 @@ class PermissionMiddleware implements Middleware
         $routeContext = RouteContext::fromRequest($request);
 
         if ($this->persistence->hasRestricted($routeContext->getRoute()->getCallable())) {
-          return (new OAuthServerException('未获得授权！', 401, 'Unauthorized'))->generateHttpResponse(new \Slim\Psr7\Response());
+          return new OAuthServerException('未获得授权！', 401, 'Unauthorized')->generateHttpResponse(new SlimResponse());
         }
         return $handler->handle($request);
       } else {
-        // 尝试通过OauthAccessToken恢复会话
-        try {
-          $accessToken = $this->container->get(WpUserInterface::class)->checkOauthUser();
-          if ($accessToken) {
-            $user = $this->container->get(WpUserInterface::class)->getOauthUserinfo($accessToken);
-            if ($user && $user['id'] > 0) {
-              $admin = $this->container->get(AdminInterface::class)->get('id,role_id,groupId,account', ['uid' => $user['id'], 'status' => 1]);
-              if (isset($admin['id'])) {
-                $_SESSION['login_id'] = $admin['id'];
-                $_SESSION['role_id'] = $admin['role_id'];
-                $_SESSION['groupId'] = $admin['groupId'];
-                $_SESSION['user_id'] = $user['id'];
-                // 获取当前请求的 URL
-                $url = $request->getUri()->getPath();
-                $this->container->get(LoggerInterface::class)->info($url, $admin);
-                return $handler->handle($request)->withHeader('Location', $url)->withStatus(302);
-              }
-            }
-          }
-        } catch (Exception) {
-          // 服务端不使用此方法
-        }
-        if (isset($_SESSION['login_user_id']) && is_numeric($_SESSION['login_user_id'])) {
-          $user_id = $_SESSION['login_user_id'];
-          unset($_SESSION['login_user_id']);
+        if (isset($_SESSION['login_openid']) && is_numeric($_SESSION['login_openid'])) {
+          $openid = $_SESSION['login_openid'];
+          unset($_SESSION['login_openid']);
           // 通过公众号被动回复连接授权，恢复会话
-          $admin = $this->container->get(AdminInterface::class)->get('id,role_id,groupId,status', ['uid' => $user_id]);
+          $admin = $this->admin->get(['openid' => $openid]);
           if (isset($admin['status']) && $admin['status'] == 1) {
             $_SESSION['login_id'] = $admin['id'];
             $_SESSION['role_id'] = $admin['role_id'];
             $_SESSION['groupId'] = $admin['groupId'];
-            $_SESSION['user_id'] = $user_id;
+            $_SESSION['user_openid'] = $openid;
             $serverParams = $request->getServerParams();
             $ip = $serverParams['HTTP_X_FORWARDED_FOR'] ?? $serverParams['REMOTE_ADDR'];
-            $this->container->get(LoggerInterface::class)->log(0, '通过公众号被动回复连接授权登录到系统，登录IP:' . $ip . '。', $admin);
-            $this->container->get(AdminInterface::class)->update(['lastLoginTime' => time(), 'lastLoginIp' => $ip], ['id' => $_SESSION['login_id']]);
+            $this->admin->updateEntityToArray(['lastLoginTime' => time(), 'lastLoginIp' => $ip], ['id' => $admin['id']]);
+            AuditLogContext::markActor(type: 'admin', id: $admin['id']);
+            AuditLogContext::markChanged(resource: null, id: null, action: 'login');
             // 获取当前请求的 URL
             $url = $request->getUri()->getPath();
-            $this->container->get(LoggerInterface::class)->info($url, $admin);
             return $handler->handle($request)->withHeader('Location', $url)->withStatus(302);
           }
         }
         if ($request->getHeaderLine("X-Requested-With") == "XMLHttpRequest") {
-          $response = new \Slim\Psr7\Response();
+          $response = new SlimResponse();
           $json = json_encode(['type' => 'reload', 'errMsg' => '用户未登录或登录超时！']);
           $response->getBody()->write($json);
           return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         } else {
-          $code = Crypto::encrypt(session_id(), Key::loadFromAsciiSafeString($this->container->get(Setting::class)->get('oauth2Config')['encryptionKey']));
-          $renderer = new ImageRenderer(new RendererStyle(400), new SvgImageBackEnd());
-          $writer = new Writer($renderer);
-          $data['loginQr'] = $writer->writeString($request->getUri()->getScheme() . '://' . $request->getUri()->getHost() . $this->basePath . '/qrLogin?tk=' . $code);
-          $data['basePath'] = $this->basePath;
-          $data['systemName'] = $this->systemName;
-          return Twig::fromRequest($request)->render(new \Slim\Psr7\Response(), 'admin/login.html', $data);
+          foreach (glob(ROOT_PATH . '/public/assets/{app-,style-}*.{js,css}', GLOB_BRACE) as $item) {
+            $item = str_replace(ROOT_PATH . '/public', '', $item);
+            if (str_ends_with($item, '.css')) $data['app_css_path'] = $item;
+            else $data['app_js_path'] = $item;
+          }
+          $userAgent = $request->getHeaderLine('User-Agent');
+          $isWechat = str_contains(strtolower($userAgent), 'micromessenger');
+          if ($isWechat) {
+            $data['redirect_uri'] = RouteContext::fromRequest($request)->getRouteParser()->urlFor('app.qrLogin', [], ['state' => 'weixin']);
+          } else {
+            $scene = bin2hex(random_bytes(16));
+            $this->cache->set($scene, session_id(), 60);
+            $baseUrl = RouteContext::fromRequest($request)->getRouteParser()->urlFor('app.qrLogin', [], ['tk' => $scene]);
+            $data['loginQr'] = $this->writer->writeString($request->getUri()->getScheme() . '://' . $request->getUri()->getHost() . $baseUrl);
+          }
+          $data['systemName'] = getenv('APP_NAME');
+          return Twig::fromRequest($request)->render(new SlimResponse(), 'pages/home/login.twig', $data);
         }
       }
     }

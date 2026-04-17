@@ -1,0 +1,102 @@
+{% extends "pages/common/modal.twig" %}
+
+{% block modal_body %}
+  <div class="row overflow-y-auto" style="max-height: 70vh;">
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">事件时间</small>
+      </div>
+      <div class="col-auto">
+        <span class="fw-bold">{{ log.event_time|date('Y-m-d H:i:s') }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">行为</small>
+      </div>
+      <div class="col-auto">
+        <span class="text-danger fw-bold">{{ log.action }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">行为描述</small>
+      </div>
+      <div class="col-auto">
+        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.action_desc }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">操作用户</small>
+      </div>
+      <div class="col-auto">
+      <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.actor_type }}
+        {% if log.user %}({{ log.user }} ID: {{ log.actor_id }}){% endif %}
+      </span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">请求客户端</small>
+      </div>
+      <div class="col-auto">
+        <div class="badge bg-outline-dark border text-dark font-monospace">{{ log.device }}</div>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">请求IP</small>
+      </div>
+      <div class="col-auto">
+        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.ip }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">请求路由</small>
+      </div>
+      <div class="col-auto">
+        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.route }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">请求方式</small>
+      </div>
+      <div class="col-auto">
+        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.method }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">操作资源</small>
+      </div>
+      <div class="col-auto">
+        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.resource }}</span>
+      </div>
+    </div>
+
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <small class="text-muted d-block">资源ID</small>
+      </div>
+      <div class="col-auto">
+        <span class="text-danger fw-bold">{{ log.resource_id }}</span>
+      </div>
+    </div>
+
+
+    <pre class="text-info text-bg-dark w-100 mb-0 fs-7">
+  {{- log.context|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE')) -}}
+  </pre>
+  </div>
+{% endblock %}

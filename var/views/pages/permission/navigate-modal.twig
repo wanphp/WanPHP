@@ -1,0 +1,28 @@
+{% extends "pages/common/modal.twig" %}
+
+{% block modal_body %}
+  <form hx-post="{{ action }}"
+        hx-swap="none"
+        class="needs-validation"
+        data-modal-form
+        data-reset
+        novalidate>
+  <div class="input-group mb-3">
+    <label for="name" class="input-group-text">菜单名称</label>
+    <input id="name" name="name" value="{{ navigate.name }}" type="text" class="form-control" placeholder="菜单名称" required
+           autocomplete="off">
+  </div>
+  <div class="input-group mb-3">
+    <label for="icon" class="input-group-text">图标样式</label>
+    <input id="icon" name="icon" value="{{ navigate.icon }}" type="text" class="form-control" placeholder="fa字体样式" required>
+  </div>
+  <div class="input-group">
+    <label for="sortOrder" class="input-group-text">显示排序</label>
+    <input id="sortOrder" name="sortOrder" value="{{ navigate.sortOrder }}" type="number" class="form-control"
+           placeholder="显示排序" required>
+  </div>
+  <div class="d-grid gap-2 mt-3 col-6 mx-auto">
+    <button type="submit" class="btn btn-primary">提交</button>
+  </div>
+</form>
+{% endblock %}
