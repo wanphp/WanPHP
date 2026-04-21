@@ -1,0 +1,14 @@
+[mysqld]
+
+# GTID
+gtid_mode = ON
+enforce_gtid_consistency = ON
+
+# binlog
+log_bin = mysql-bin
+binlog_format = ROW
+sync_binlog = 1
+expire_logs_days = 7
+
+# 支持主从切换
+log_slave_updates = ON

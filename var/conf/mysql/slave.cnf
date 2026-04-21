@@ -1,0 +1,21 @@
+[mysqld]
+
+server-id = 2
+
+# relay log
+relay-log = slave-relay-bin
+relay-log-index = slave-relay-bin.index
+
+# 复制信息持久化，防止重启后找不到主库
+master_info_repository = TABLE
+relay_log_info_repository = TABLE
+
+# 自动启动复制
+skip_slave_start = OFF
+
+# 崩溃恢复
+relay_log_recovery = 1
+
+# 强制只读（防误操作）
+read_only = 1
+super_read_only = 1

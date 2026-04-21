@@ -1,0 +1,6 @@
+[mysqld]
+
+server-id = 1
+
+# 限制复制库
+binlog-do-db = wanphp
