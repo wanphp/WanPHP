@@ -13,4 +13,4 @@ MASTER_DATABASE_PORT=主库端口
 
 ### 数据库备份
 在宿主机加定时任务备份 \
-0 3 * * * docker exec mysql-slim /backup.sh
+0 3 * * * /usr/bin/docker exec mysql-slim /bin/bash /backup.sh >> /var/log/mysql_backup.log 2>&1

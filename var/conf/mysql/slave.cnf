@@ -1,21 +1,23 @@
 [mysqld]
-
+# --- 基础标识 ---
 server-id = 2
 
-# relay log
-relay-log = slave-relay-bin
-relay-log-index = slave-relay-bin.index
+# --- Relay Log (中继日志) ---
+relay_log = slave-relay-bin
+relay_log_index = slave-relay-bin.index
+# 崩溃恢复：如果从库异常宕机，重启后自动清理不完整的 relay log，从主库重新拉取
+relay_log_recovery = ON
 
-# 复制信息持久化，防止重启后找不到主库
-master_info_repository = TABLE
-relay_log_info_repository = TABLE
-
-# 自动启动复制
-skip_slave_start = OFF
-
-# 崩溃恢复
-relay_log_recovery = 1
-
-# 强制只读（防误操作）
+# --- 安全性 (非常棒的实践) ---
+# 防止普通用户和具有 SUPER 权限的用户误写数据
 read_only = 1
 super_read_only = 1
+
+# --- 启动控制 ---
+# 如果你希望容器启动后自动开始同步，设为 OFF；
+# 如果你想手动检查后再同步，设为 ON。
+skip_replica_start = OFF
+
+# --- 限制同步库（可选） ---
+#replicate-wild-do-table = wanphp.%
+#replicate-wild-do-table = wan_orders.%
