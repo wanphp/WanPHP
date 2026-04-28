@@ -11,6 +11,10 @@ services:
     depends_on:
       - php-fpm
     #image: wanphp/nginx
+    build: ./docker/nginx
+    environment:
+      APP_UPLOAD_FILE_PATH: ${APP_UPLOAD_FILE_PATH}
+      BACKEND_PHP: "php-fpm-slim"
     volumes:
       - ./:/var/www:cached
       - ./var/logs/nginx:/var/log/nginx
@@ -24,8 +28,8 @@ services:
         max-size: 10m
     # 映射80和443端口
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:8080"
+      - "443:8443"
     # 容器名称
     container_name: nginx-slim
     networks:
@@ -106,7 +110,7 @@ services:
 
   composer:
     image: composer:latest
-    command: [ "composer", "update" ]
+    command: [ "composer", "update", "--ignore-platform-reqs"]
     container_name: composer-slim
     volumes:
       - ./:/app

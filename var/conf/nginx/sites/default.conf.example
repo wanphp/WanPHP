@@ -1,0 +1,32 @@
+server {
+
+  listen 443 ssl;
+  listen [::]:443 ssl;
+
+  ssl_certificate /etc/nginx/ssl/wanphp.crt;
+  ssl_certificate_key /etc/nginx/ssl/wanphp.key;
+  ssl_protocols         TLSv1.3;
+  include includes/ssl.conf;
+
+  include includes/security.conf;
+
+  set $upload_file_path /var/www/var/uploadFiles;
+  server_name wanphp.com www.wanphp.com;
+  root /var/www/public;
+  index index.php index.html;
+
+  location / {
+    try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  include includes/php-fpm.conf;
+  include includes/files.conf;
+  include includes/proxy_wx_image.conf;
+
+  location ~ /\.(ht|git|svn) {
+      deny all;
+  }
+
+  error_log /var/log/nginx/default_error.log;
+  access_log /var/log/nginx/default_access.log;
+}

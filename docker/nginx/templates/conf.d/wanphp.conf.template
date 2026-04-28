@@ -1,0 +1,56 @@
+  # --- WAF 缓冲区调优 ---
+  # WAF 检查大 Post 请求或长 Header 时需要这些
+  client_max_body_size 20M;
+  client_body_buffer_size 128k;
+  client_header_buffer_size 128k;
+  large_client_header_buffers 4 128k;
+
+  access_log /dev/stdout;
+  error_log /dev/stderr;
+
+  # --- Gzip 配置 ---
+  gzip on;
+  gzip_disable "msie6";
+  gzip_comp_level 5;
+  gzip_min_length 256;
+  gzip_proxied any;
+  gzip_vary on;
+  gzip_types application/atom+xml application/javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component;
+
+  server_tokens ${SERVER_TOKENS};
+
+  map $http_referer $valid_referer_custom {
+      default 0;
+      "" 1;
+      "~*$host" 1;
+  }
+
+  map $http_upgrade $connection_upgrade {
+      default upgrade;
+      '' close;
+  }
+
+  # JSON日志
+  log_format log_json escape=json '{'
+    '"time":"$time_iso8601",'
+    '"ip":"$remote_addr",'
+    '"uri":"$request_uri",'
+    '"status":$status,'
+    '"req_id":"$request_id"' # 建议带上 ID 方便追踪 WAF 日志
+  '}';
+
+  # 微信图片缓存区
+  proxy_cache_path /var/cache/nginx/wechat levels=1:2 keys_zone=wechat_cache:100m max_size=1g inactive=60m use_temp_path=off;
+
+  # --- 包含站点配置 ---
+  include /etc/nginx/sites-available/*.conf;
+  # --- 文件缓存 ---
+  open_file_cache max=10000 inactive=30s;
+  # 缓存 60 秒后重新验证
+  open_file_cache_valid 60s;
+  # inactive 时间内至少被访问 2 次才会缓存，避免冷数据占用
+  open_file_cache_min_uses 2;
+  # 也缓存文件不存在、权限错误等结果，减少重复磁盘 IO
+  open_file_cache_errors on;
+
+  charset UTF-8;
