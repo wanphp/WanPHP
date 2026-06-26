@@ -15,7 +15,6 @@ use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use League\OAuth2\Server\ResourceServer;
-use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Psr16Cache;
 use WanPHP\Core\Database\EntityManager;
 use WanPHP\Core\Entities\ClientEntity;
@@ -33,16 +32,7 @@ return function (ContainerBuilder $containerBuilder) {
     // 注册后台中间件，给plugin使用
     AdminPermissionMiddlewareInterface::class => autowire(PermissionMiddleware::class),
     // 注册文档中间件
-    DocAuthMiddleware::class => autowire()
-      ->constructorParameter('secretPassword', getenv('API_DOCS_PASSWORD') ?: '123456')
-      ->constructorParameter('validToken', function (CacheInterface $cache) {
-        $validToken = $cache->get(session_id());
-        if (!$validToken) {
-          $validToken = bin2hex(random_bytes(32));
-          $cache->set(session_id(), $validToken, 3600);
-        }
-        return $validToken;
-      }),
+    DocAuthMiddleware::class => autowire()->constructorParameter('secretPassword', getenv('API_DOCS_PASSWORD') ?: '123456'),
     // 注册 OAuth2 接口映射
     AccessTokenRepositoryInterface::class => function () {
       $redisCacheFactory = new RedisCacheFactory(

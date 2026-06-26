@@ -15,13 +15,16 @@ class DocAuthMiddleware implements MiddlewareInterface
   private const string AUTH_COOKIE_NAME = 'docs_auth_token';
 
   private string $secretPassword;
-  private string $validToken;
 
   // 通过构造函数接收 DI 注入的配置值
-  public function __construct(string $secretPassword, string $validToken)
+  public function __construct(string $secretPassword)
   {
     $this->secretPassword = $secretPassword;
-    $this->validToken = $validToken;
+  }
+
+  private function getValidToken(): string
+  {
+    return hash_hmac('sha256', 'swagger-docs', $this->secretPassword . session_id());
   }
 
   /**
@@ -30,7 +33,7 @@ class DocAuthMiddleware implements MiddlewareInterface
   private function isAuthenticated(Request $request): bool
   {
     $cookies = $request->getCookieParams();
-    return isset($cookies[self::AUTH_COOKIE_NAME]) && $cookies[self::AUTH_COOKIE_NAME] === $this->validToken;
+    return isset($cookies[self::AUTH_COOKIE_NAME]) && hash_equals($this->getValidToken(), $cookies[self::AUTH_COOKIE_NAME]);
   }
 
   /**
@@ -141,7 +144,7 @@ HTML;
           // 设置一个包含有效 Token 的 Cookie，有效期 1 小时 (3600 秒)
           $expires = time() + 3600;
           // 确保 Path, HttpOnly, Secure 设置正确
-          $cookieHeader = self::AUTH_COOKIE_NAME . '=' . $this->validToken . '; Path=/; Expires=' . gmdate('D, d M Y H:i:s T', $expires) . '; HttpOnly; Secure; SameSite=Lax';
+          $cookieHeader = self::AUTH_COOKIE_NAME . '=' . $this->getValidToken() . '; Path=/; Expires=' . gmdate('D, d M Y H:i:s T', $expires) . '; HttpOnly; Secure; SameSite=Lax';
 
           return $response->withStatus(302)->withHeader('Location', $docUrl)->withHeader('Set-Cookie', $cookieHeader);
         } else {
