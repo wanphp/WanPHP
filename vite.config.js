@@ -8,7 +8,6 @@ export default defineConfig({
     alias: {
       '@core': path.resolve(__dirname, 'vendor/wanphp/core/js'),
       '@pages': path.resolve(__dirname, 'var/views/pages'),
-      '@spa': path.resolve(__dirname, 'var/views/spa'),
       '@plugins': path.resolve(__dirname, 'wanphp/plugins'),
     },
   },
@@ -21,8 +20,7 @@ export default defineConfig({
     manifest: true,
     rollupOptions: {
       input: {
-        app: 'var/resources/js/app.js',
-        spa: 'var/resources/js/spa.js'
+        app: 'var/resources/js/app.js'
       }
     },
   }
