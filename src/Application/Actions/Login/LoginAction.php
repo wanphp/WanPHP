@@ -126,11 +126,11 @@ class LoginAction extends Action
 
     if ($this->isPost()) {
       $data = $this->getFormData();
-      $admin = new AdminEntity()->setAccount($data['account'])->setPassword($data['password']);
-      if ($this->admin->updateEntityToArray($admin->toArray(false), ['account' => $data['init_account']])) {
-        return $this->response->withStatus(302)->withHeader('Location', $this->urlFor('app.login'));
+      $initUser = $this->admin->initialization($data['account'], $data['password']);
+      if ($initUser) {
+        return $this->respondWxMsg('warn', '重复操作', '系统已初始化。');
       }
-      return $this->respondWxMsg('warn', '更新出错', '账号信息未更新。');
+      return $this->response->withStatus(302)->withHeader('Location', $this->urlFor('app.login'));
     }
 
 
@@ -173,8 +173,7 @@ class LoginAction extends Action
     }
 
     $password = implode('', $passwordArray);
-    $initUser = $this->admin->initialization($account, $password);
-    if ($initUser) {
+    if ($this->admin->count() > 0) {
       return $this->response->withStatus(302)->withHeader('Location', $this->urlFor('app.login'));
     }
     $loginUrl = $this->httpHost() . $this->urlFor('app.login');
@@ -238,12 +237,11 @@ class LoginAction extends Action
 </head>
 <body>
   <div class="container">
-    <h2>系统初始化完成</h2>
+    <h2>系统初始化</h2>
     <p style="color: red">注意！！初始化信息只显示一次，请妥善保存！否则无法登录系统。</p>
     <div class="body">
       <form id="myForm" action="" method="POST">
         <p>
-          <input type="hidden" name="init_account" value="$account">
           <input type="text" name="account" value="$account" placeholder="初始化用户账号" required autocomplete="off">
           <br><span>初始化用户账号，可修改</span>
         </p>

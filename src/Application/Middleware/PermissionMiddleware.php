@@ -131,6 +131,7 @@ final readonly class PermissionMiddleware implements AdminPermissionMiddlewareIn
           $response->getBody()->write($json);
           return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         } else {
+          if (!$this->admin->count()) return $handler->handle($request)->withHeader('Location', $request->getUri()->getScheme() . '://' . $request->getUri()->getHost() . RouteContext::fromRequest($request)->getRouteParser()->urlFor('app.init'))->withStatus(302);
           foreach (glob(ROOT_PATH . '/public/assets/{app-,style-}*.{js,css}', GLOB_BRACE) as $item) {
             $item = str_replace(ROOT_PATH . '/public', '', $item);
             if (str_ends_with($item, '.css')) $data['app_css_path'] = $item;
