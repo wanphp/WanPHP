@@ -41,7 +41,7 @@ class AdminEditPasswordModal extends Page {
 
       this.timer = setInterval(() => {
         this.checkNum++;
-        htmx.ajax('post', this.$('[data-bind-action]').attr('data-bind-action'), {
+        htmx.ajax('post', e.currentTarget.dataset.action, {
           swap: 'none',
           target: e.currentTarget
         });

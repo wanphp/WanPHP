@@ -108,6 +108,7 @@ class LoginAction extends Action
         $data['loginQr'] = $this->writer->writeString($this->httpHost() . $baseUrl);
       }
       $data['systemName'] = getenv('APP_NAME');
+      $data['__full_page'] = true;
 
       return $this->respondView('pages/home/login.twig', $data);
     }
