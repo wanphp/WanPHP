@@ -13,8 +13,8 @@
     }
   ],
   "require": {
-    "monolog/monolog": "^2.2",
-    "wanphp/core": "v2.0.0",
+    "monolog/monolog": "^3.12",
+    "wanphp/core": "^v2.0.0",
     "matomo/device-detector": "^6.5",
     "ext-pdo": "*",
     "ext-redis": "*",
