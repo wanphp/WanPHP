@@ -25,7 +25,7 @@
         <small class="text-muted d-block">行为描述</small>
       </div>
       <div class="col-auto">
-        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.action_desc }}</span>
+        <span class="badge bg-body-tertiary border font-monospace">{{ log.action_desc }}</span>
       </div>
     </div>
 
@@ -34,7 +34,7 @@
         <small class="text-muted d-block">操作用户</small>
       </div>
       <div class="col-auto">
-      <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.actor_type }}
+      <span class="badge bg-body-tertiary border font-monospace">{{ log.actor_type }}
         {% if log.user %}({{ log.user }} ID: {{ log.actor_id }}){% endif %}
       </span>
       </div>
@@ -45,7 +45,7 @@
         <small class="text-muted d-block">请求客户端</small>
       </div>
       <div class="col-auto">
-        <div class="badge bg-outline-dark border text-dark font-monospace">{{ log.device }}</div>
+        <div class="badge bg-body-tertiary border font-monospace">{{ log.device }}</div>
       </div>
     </div>
 
@@ -54,7 +54,7 @@
         <small class="text-muted d-block">请求IP</small>
       </div>
       <div class="col-auto">
-        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.ip }}</span>
+        <span class="badge bg-body-tertiary border font-monospace">{{ log.ip }}</span>
       </div>
     </div>
 
@@ -63,7 +63,7 @@
         <small class="text-muted d-block">请求路由</small>
       </div>
       <div class="col-auto">
-        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.route }}</span>
+        <span class="badge bg-body-tertiary border font-monospace">{{ log.route }}</span>
       </div>
     </div>
 
@@ -72,7 +72,7 @@
         <small class="text-muted d-block">请求方式</small>
       </div>
       <div class="col-auto">
-        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.method }}</span>
+        <span class="badge bg-body-tertiary border font-monospace">{{ log.method }}</span>
       </div>
     </div>
 
@@ -81,7 +81,7 @@
         <small class="text-muted d-block">操作资源</small>
       </div>
       <div class="col-auto">
-        <span class="badge bg-outline-dark border text-dark font-monospace">{{ log.resource }}</span>
+        <span class="badge bg-body-tertiary border font-monospace">{{ log.resource }}</span>
       </div>
     </div>
 
