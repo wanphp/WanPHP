@@ -10,8 +10,7 @@ services:
     # 依赖php服务，意味着在启动nginx之前先启动php
     depends_on:
       - php-fpm
-    #image: wanphp/nginx
-    build: ./docker/nginx
+    image: wanphp/nginx-modsecurity-crs:latest
     environment:
       APP_UPLOAD_FILE_PATH: ${APP_UPLOAD_FILE_PATH}
       BACKEND_PHP: "php-fpm-slim"
@@ -36,8 +35,7 @@ services:
       - backend
 
   php-fpm:
-    #image: wanphp/php
-    build: ./docker/php
+    image: wanphp/php:latest
     restart: always
     logging:
       driver: json-file
@@ -53,8 +51,7 @@ services:
       - backend
 
   mysql:
-    #image: wanphp/mysql
-    build: ./docker/mysql
+    image: wanphp/mariadb:latest
     volumes:
       - ./var/data/mysql:/var/lib/mysql
       - ./var/logs/mysql:/var/log/mysql
@@ -71,7 +68,7 @@ services:
     #  - "13306:3306"
     container_name: mysql-slim
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: ["CMD", "healthcheck.sh", "--connect"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,8 +76,7 @@ services:
       - backend
 
   redis:
-    #image: wanphp/redis
-    build: ./docker/redis
+    image: wanphp/redis:latest
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
@@ -88,12 +84,12 @@ services:
     restart: always
     #ports:
     #  - "16379:6379"
-    container_name: redis-slim
+    container_name: redis
     networks:
       - backend
 
   worker:
-    #image: wanphp/php_worker:latest
+    image: wanphp/php-worker:latest
     build: ./docker/worker
     container_name: log-worker
     working_dir: /app
