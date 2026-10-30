@@ -22,11 +22,7 @@
     "ext-libxml": "*"
   },
   "config": {
-    "process-timeout": 0,
-    "sort-packages": true,
-    "allow-plugins": {
-      "wanphp/installers": true
-    }
+    "sort-packages": true
   },
   "autoload": {
     "psr-4": {

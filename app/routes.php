@@ -38,7 +38,7 @@ return function (App $app) {
     // 服务端设置了私钥，添加路由
     if (getenv('OAUTH2_PRIVATE_KEY')) $paths[] = ROOT_PATH . '/vendor/wanphp/core/src/AuthAction';
 
-    $actionPath = glob(ROOT_PATH . '/wanphp/plugins/*/src/Application', GLOB_ONLYDIR);
+    $actionPath = glob(ROOT_PATH . '/vendor/wanphp/plugins-*/src/Application', GLOB_ONLYDIR);
     if ($actionPath) $paths = array_merge($paths, $actionPath);
 
     // 权限

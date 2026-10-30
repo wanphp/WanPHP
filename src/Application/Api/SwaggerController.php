@@ -134,10 +134,10 @@ readonly class SwaggerController
         $paths = [
           ROOT_PATH . '/src/Application/Api',
           ROOT_PATH . '/src/Entities',
-          ROOT_PATH . '/vendor/wanphp//core/src/AuthAction'
+          ROOT_PATH . '/vendor/wanphp/core/src/AuthAction'
         ];
 
-        $apiPath = glob(ROOT_PATH . '/wanphp/plugins/*/src/Application/Api', GLOB_ONLYDIR);
+        $apiPath = glob(ROOT_PATH . '/vendor/wanphp/plugins-*/src/Application/Api', GLOB_ONLYDIR);
         if ($apiPath) $paths = array_merge($paths, $apiPath);
         $openApi = $generator->generate($paths);
 

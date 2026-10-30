@@ -18,16 +18,19 @@ return function (App $app) {
   $app->add(new MethodOverrideMiddleware());
   $app->add(new JsonBodyParserMiddleware());
   $app->add(new SessionMiddleware($app->getContainer()->get(CacheInterface::class), getenv('APP_SESSION_NAME') ?: 'WANPHPSESSID'));
-  $allowOrigin = getenv('APP_ALLOW_ORIGIN') ? array_map('trim', explode(',', getenv('APP_ALLOW_ORIGIN'))) : [];
+  $allowOrigin = getenv('APP_ALLOW_ORIGIN') ? 'APP_ALLOW_ORIGIN'
+      |> getenv(...)
+      |> (fn($x) => explode(',', $x))
+      |> (fn($x) => array_map('trim', $x)) : [];
   $app->add(new RefererMiddleware($allowOrigin));
   $app->addRoutingMiddleware();
 
   $paths = [ROOT_PATH . '/var/views'];
 
   // 插件页面命名空间
-  foreach (glob(ROOT_PATH . '/wanphp/plugins/*/pages') as $path) {
+  foreach (glob(ROOT_PATH . '/vendor/wanphp/plugins-*/pages') as $path) {
     $parts = explode('/', $path);
-    $namespace = $parts[count($parts) - 2];
+    $namespace = ltrim($parts[count($parts) - 2], 'plugins-');
     $paths[$namespace] = $path;
   }
 
