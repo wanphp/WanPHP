@@ -6,9 +6,10 @@ export default defineConfig({
   publicDir: 'var/public',
   resolve: {
     alias: {
-      '@core': path.resolve(__dirname, 'vendor/wanphp/core/js'),
-      '@pages': path.resolve(__dirname, 'var/views/pages'),
-      '@plugins': path.resolve(__dirname, 'wanphp/plugins'),
+      '@core': path.resolve(import.meta.dirname, 'vendor/wanphp/core/js'),
+      '@pages': path.resolve(import.meta.dirname, 'var/views/pages'),
+      '@spa': path.resolve(import.meta.dirname, 'var/views/spa'),
+      '@plugins': path.resolve(import.meta.dirname, 'wanphp/plugins'),
     },
   },
   build: {
@@ -20,7 +21,8 @@ export default defineConfig({
     manifest: true,
     rollupOptions: {
       input: {
-        app: 'var/resources/js/app.js'
+        app: 'var/resources/js/app.js',
+        spa: 'var/resources/js/spa.js'
       }
     },
   }

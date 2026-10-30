@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "vite build"
   },
@@ -11,22 +12,22 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^8.0.8"
+    "vite": "^8.2.1"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.1.0",
-    "admin-lte": "^4.0.0-rc6",
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "admin-lte": "^4.3.1",
     "bootstrap": "^5.3.8",
     "datatables.net-bs5": "^2.3.6",
     "datatables.net-responsive-bs5": "^3.0.8",
     "flatpickr": "^4.6.13",
-    "htmx.org": "^2.0.8",
-    "jquery": "^3.7.1",
-    "select2": "^4.1.0-rc.0",
+    "htmx.org": "^2.0.10",
+    "jquery": "^4.0.0",
+    "select2": "4.1.0-rc.0",
     "select2-bootstrap-5-theme": "^1.3.0",
-    "sortablejs": "^1.15.6",
+    "sortablejs": "^1.15.7",
     "spark-md5": "^3.0.2",
     "summernote": "^0.9.1",
-    "sweetalert2": "^11.26.17"
+    "sweetalert2": "^11.26.25"
   }
 }

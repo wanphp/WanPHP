@@ -8,6 +8,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
   <link rel="shortcut icon" href="/assets/images/logo.png">
   <link rel="stylesheet" href="{{ app_css_path }}"/>
+  <script>
+    try {
+      if (!localStorage.getItem('lte-theme')) localStorage.setItem('lte-theme', 'light');
+    } catch (e) {
+    }
+  </script>
   <script type="module" src="{{ app_js_path }}"></script>
 </head>
 <body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary layout-fixed sidebar-open">
