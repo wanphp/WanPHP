@@ -9,7 +9,7 @@ export default defineConfig({
       '@core': path.resolve(import.meta.dirname, 'vendor/wanphp/core/js'),
       '@pages': path.resolve(import.meta.dirname, 'var/views/pages'),
       '@spa': path.resolve(import.meta.dirname, 'var/views/spa'),
-      '@plugins': path.resolve(import.meta.dirname, 'wanphp/plugins'),
+      '@wp': path.resolve(import.meta.dirname, 'vendor/wanphp'),
     },
   },
   build: {

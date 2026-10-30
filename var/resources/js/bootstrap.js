@@ -33,8 +33,12 @@ import flatpickr from 'flatpickr';
 
 window.flatpickr = flatpickr;
 
-import 'datatables.net-bs5';
+import DataTable from 'datatables.net-bs5';
 import 'datatables.net-responsive-bs5';
+
+// 显式关联 jQuery
+DataTable.use($);
+
 import 'summernote';
 
 import htmx from 'htmx.org';
