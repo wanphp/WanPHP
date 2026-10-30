@@ -112,7 +112,7 @@ class PersistenceService extends Service
             }
             $this->restricted = [];
           } else {
-            $restricted = $this->roleRepository->get('restricted[JSON]', ['id' => $role_id]);
+            $restricted = $this->roleRepository->get('scopes[JSON]', ['id' => $role_id]);
             if ($restricted) {
               foreach ($routers as $action) {
                 if (in_array($action['id'], $restricted)) {
