@@ -51,8 +51,22 @@ class FilesAction extends Action
         if (!empty($users[$file['openid']])) $file['user'] = $users[$file['openid']];
         $file['download'] = $this->urlFor('app.file.download', ['id' => $file['id']]);
         $file['actions'] = [
-          'edit' => ['name' => '修改', 'path' => $this->urlFor('app.file.edit', ['id' => $file['id']])],
-          'delete' => ['name' => '删除', 'path' => $this->urlFor('app.file.delete', ['id' => $file['id']])]
+          'edit' => [
+            'name' => '修改',
+            'path' => $this->urlFor('app.file.edit', ['id' => $file['id']]),
+            'btnType'=>'tool hover-btn edit position-absolute top-0 end-0',
+            'promptConfirm' => [
+              'title' => '修改文件名',
+              'input' => 'textarea',
+              'value' => $file['name']
+            ]
+          ],
+          'delete' => [
+            'name' => '删除',
+            'path' => $this->urlFor('app.file.delete', ['id' => $file['id']]),
+            'btnType'=>'tool hover-btn delete position-absolute bottom-0 end-0',
+            'message' => '是否确认要删除文件'
+          ]
         ];
       }
       unset($file);

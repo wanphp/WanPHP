@@ -1,6 +1,5 @@
 import {registerPage, registerDataTable, DataTableFactory} from "@core/Registry";
 import Page from '@core/Page';
-import htmx from "htmx.org";
 import {compressImageAuto, selectFile, uploadFile} from "@core/Upload";
 
 let pageName = 'app.files';
@@ -75,18 +74,17 @@ class FilesPage extends Page {
           }
         },
         {
-          title: '文件名', className: 'align-middle position-relative pe-4', data: "name", render: function (data) {
-            return `<div class="text-limit-2" data-bs-toggle="tooltip" data-bs-title="${data}">${data}</div>
-        <button class="btn btn-tool hover-btn edit position-absolute top-0 end-0" data-bs-toggle="tooltip" data-bs-title="修改文件名">
-          <i class="fas fa-edit"></i></button>
-        <button type="button" class="btn btn-tool hover-btn delete position-absolute bottom-0 end-0">
-        <i class="fas fa-trash-alt" data-bs-toggle="tooltip" data-bs-title="删除文件"></i></button>`;
+          title: '文件名',
+          className: 'align-middle position-relative pe-4',
+          data: "name",
+          render: (data, type, row) => {
+            return `<div class="text-limit-2" data-bs-toggle="tooltip" data-bs-title="${data}">${data}</div>${this.getTableButtons(row.actions)}`;
           }
         },
         {
-          title: '上传时间', data: "uptime", className: "align-middle", render: (data, type, row) => {
-            let date = this.formatDateTime(data);
-            if (row.user) {
+          title: '上传时间', data: "user", className: "align-middle", render: (data, type, row) => {
+            let date = this.formatDateTime(row.uptime);
+            if (data) {
               return (data.avatar ? '<img src="' + data.avatar + '" class="img-thumbnail" alt="" style="padding:0;" width="30">' : '') + data.nickname + '<br>' + date;
             } else {
               return date;
@@ -108,39 +106,6 @@ class FilesPage extends Page {
   }
 
   bindEvents() {
-    this.on('click', '.table .edit', e => {
-      const data = this.getTableRowData(e.target.closest('tr').id);
-      Swal.fire({
-        input: "textarea",
-        inputLabel: "修改文件名",
-        inputValue: data.name,
-        inputPlaceholder: "输入文件名",
-        showCancelButton: true,
-        showConfirmButton: true,  // 确保显示确定按钮
-        confirmButtonColor: '#d33',
-        confirmButtonText: '提交',
-        cancelButtonText: '取消'
-      }).then(result => {
-        if (result.isConfirmed && result.value) {
-          const fd = new FormData();
-          fd.append('name', result.value);
-          htmx.ajax('patch', data.edit, {
-            swap: 'none',
-            values: fd,
-          }).then();
-        }
-      });
-    });
-    this.on('click', '.table .delete', e => {
-      console.log('delete', e);
-      const data = this.getTableRowData(e.target.closest('tr').id);
-      confirmDialog('是否确认要删除文件', () => {
-        htmx.ajax('delete', data.delete, {
-          swap: 'none',
-          target: e.target
-        }).catch(err => console.log(err));
-      });
-    });
     this.on('click', '.card-tools button', async (e) => {
       let file = await selectFile({accept: '*/*'});
       if (!file) return;
@@ -167,7 +132,6 @@ class FilesPage extends Page {
           image: 'm-0 img-fluid rounded shadow-lg'
         },
         width: 'auto',
-        imageHeight: '500',
         padding: '0',
         showConfirmButton: false
       }).then();

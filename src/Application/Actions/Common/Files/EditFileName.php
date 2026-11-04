@@ -25,8 +25,8 @@ public function __construct(private readonly UploaderService $uploader)
   {
     $data = $this->getFormData();
     $id = (int)$this->resolveArg('id', 0);
-    if ($id > 0 && !empty($data['name'])) {
-      $num = $this->uploader->setName($id, $data['name']);
+    if ($id > 0 && !empty($data['value'])) {
+      $num = $this->uploader->setName($id, $data['value']);
       return $this->respondWithData(['upNum' => $num]);
     } else {
       return $this->respondWithError('修改失败！');
