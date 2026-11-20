@@ -76,6 +76,7 @@ class AdminAction extends Action
       if (!empty($openid)) $users = $this->user->getUserInfo($openid);
       foreach ($admins as &$admin) {
         if (!empty($users[$admin['openid']])) $admin['user'] = $users[$admin['openid']];
+        $admin['lastLoginTime'] = date('Y-m-d H:i:s', $admin['lastLoginTime'] ?: 0);
         $admin['actions'] = [
           'edit' => [
             'name' => '修改',

@@ -74,7 +74,7 @@ return function (ContainerBuilder $containerBuilder) {
     },
     // 注册缓存
     CacheInterface::class => function (RedisCacheFactory $redisCacheFactory) {
-      return new Psr16Cache($redisCacheFactory->create((int)getenv('REDIS_DEFAULT_DB')));
+      return new Psr16Cache($redisCacheFactory->create((int)getenv('REDIS_DEFAULT_DB'), getenv('REDIS_CACHE_PREFIX')));
     },
     // redis队列
     RedisStream::class => function () {

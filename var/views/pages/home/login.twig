@@ -5,6 +5,12 @@
   <title>登录管理系统 | 登录</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
   <link rel="stylesheet" href="{{ app_css_path }}"/>
+  <script>
+    try {
+      if (!localStorage.getItem('lte-theme')) localStorage.setItem('lte-theme', 'light');
+    } catch (e) {
+    }
+  </script>
   <script type="module" src="{{ app_js_path }}"></script>
   <style>
       .modal-body svg {
@@ -42,15 +48,17 @@
             <a class="btn btn-success" href="{{ redirect_uri }}" role="button"><i class="fab fa-weixin mr-2"></i> 微信登录</a>
           {% else %}
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#qrLoginModal">
-              <i class="fab fa-weixin mr-2"></i> 微信登录</button>
+              <i class="fab fa-weixin mr-2"></i> 微信登录
+            </button>
           {% endif %}
         </div>
       </form>
     </div>
     <!-- /.login-card-body -->
   </div>
-  {% if loginQr  %}
-    <div class="modal fade" id="qrLoginModal" data-action="{{ url_for('app.qrLogin') }}" tabindex="-1" aria-hidden="true">
+  {% if loginQr %}
+    <div class="modal fade" id="qrLoginModal" data-action="{{ url_for('app.qrLogin') }}" tabindex="-1"
+         aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">

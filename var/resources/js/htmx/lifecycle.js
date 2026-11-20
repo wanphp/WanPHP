@@ -79,7 +79,7 @@ export function registerLifecycle() {
       /* ========= 动态 Modal ========= */
       const modalName = triggerEl?.dataset?.modalName;
       const modalSize = triggerEl?.dataset?.modalSize;
-      const modalBackdrop = triggerEl?.dataset?.Backdrop;
+      const modalBackdrop = triggerEl?.dataset?.modalBackdrop;
       // 没有指定modalName 跳过
       if (!modalName) return;
 
