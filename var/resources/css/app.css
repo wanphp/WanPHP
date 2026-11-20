@@ -15,24 +15,18 @@
 }
 
 /* 默认隐藏复制按钮 */
-.dataTable .hover-btn {
-    opacity: 0;
-    transition: opacity 0.2s;
-    margin: 0;
-}
-
-.list-group-item .hover-btn {
+.dataTable .hover-btn,
+.list-group-item .hover-btn,
+.hover-btn-container .hover-btn {
     opacity: 0;
     transition: opacity 0.2s;
     margin: 0;
 }
 
 /* 鼠标移入单元格时显示 */
-.dataTable td:hover .hover-btn {
-    opacity: 1;
-}
-
-.list-group-item td:hover .hover-btn {
+.dataTable td:hover .hover-btn,
+.list-group-item td:hover .hover-btn,
+.hover-btn-container:hover .hover-btn {
     opacity: 1;
 }
 
