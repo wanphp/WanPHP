@@ -1,7 +1,7 @@
 export function userSelect2(selector, root, action, onConfirm) {
   return selector.select2({
     theme: "bootstrap-5",
-    dropdownParent: root,
+    dropdownParent: $(root),
     ajax: {
       url: action,
       dataType: 'json',

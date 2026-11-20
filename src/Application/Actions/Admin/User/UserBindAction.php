@@ -15,9 +15,9 @@ use WanPHP\Core\Service\UserService;
 class UserBindAction extends Action
 {
   public function __construct(
-    private readonly UserService      $user,
-    private readonly AdminService     $admin,
-    private readonly CacheInterface   $cache
+    private readonly UserService    $user,
+    private readonly AdminService   $admin,
+    private readonly CacheInterface $cache
   )
   {
   }
@@ -75,8 +75,9 @@ class UserBindAction extends Action
           } else {
             $account = $this->admin->getColumn('account', ['id' => $admin_id]);
             // 扫码微信未绑定过
-            $data = ['openid' => $user['openid'], 'name' => $user['name']];
-            if ($user['tel']) $data['tel'] = $user['tel'];
+            $data = ['openid' => $user['openid']];
+            if (!empty($user['name'])) $data['name'] = $user['name'];
+            if (!empty($user['tel'])) $data['tel'] = $user['tel'];
             $up = $this->admin->updateEntityToArray($data, ['id' => $admin_id]);
             if ($up > 0) {
               $this->cache->delete('userInfo_' . $admin_id);

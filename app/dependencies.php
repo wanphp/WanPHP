@@ -8,6 +8,7 @@ use BaconQrCode\Writer;
 use DI\ContainerBuilder;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Psr\Log\LoggerInterface;
@@ -31,11 +32,11 @@ return function (ContainerBuilder $containerBuilder) {
       $lineFormatter = new LineFormatter("[%datetime%] %level_name%: %message% %context% %extra%\n");
 
       // debug.log — (DEBUG, INFO)
-      $debugHandler = new RotatingFileHandler("$logPath/debug.log", 7, Logger::DEBUG, false);
+      $debugHandler = new RotatingFileHandler("$logPath/debug.log", 7, Level::Debug, false);
       // app.log — (NOTICE, WARNING)
-      $appHandler = new RotatingFileHandler("$logPath/app.log", 7, Logger::NOTICE, false);
+      $appHandler = new RotatingFileHandler("$logPath/app.log", 7, Level::Notice, false);
       // error.log — (ERROR+)
-      $errorHandler = new RotatingFileHandler("$logPath/error.log", 7, Logger::ERROR, false);
+      $errorHandler = new RotatingFileHandler("$logPath/error.log", 7, Level::Error, false);
 
       $debugHandler->setFormatter($lineFormatter);
       $appHandler->setFormatter($lineFormatter);
