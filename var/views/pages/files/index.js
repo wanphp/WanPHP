@@ -87,7 +87,7 @@ class FilesPage extends Page {
           title: '上传时间', data: "uptime", className: "align-middle", render: (data, type, row) => {
             let date = this.formatDateTime(data);
             if (row.user) {
-              return (data.avatar ? '<img src="' + data.avatar + '" class="img-thumbnail" alt="" style="padding:0;" width="30">' : '') + data.nickname + '<br>' + date;
+              return (row.user.avatar ? '<img src="' + row.user.avatar + '" class="img-thumbnail" alt="" style="padding:0;" width="30">' : '') + row.user.nickname + '<br>' + date;
             } else {
               return date;
             }
