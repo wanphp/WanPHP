@@ -100,7 +100,7 @@ class LogsAction extends Action
     name: 'app.audit.logs.detail',
     middleware: [PermissionMiddleware::class])
   ]
-  public function syncNewsHits(ServerRequestInterface $request, Response $response, array $args): Response
+  public function logDetail(ServerRequestInterface $request, Response $response, array $args): Response
   {
     $this->request = $request;
     $this->response = $response;

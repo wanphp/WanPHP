@@ -26,7 +26,7 @@ class QrLoginAction extends Action
       if ($this->getLoginId()) {
         AuditLogContext::markActor(type: 'admin', id: $this->getLoginId());
         AuditLogContext::markChanged(resource: null, id: null, action: 'login');
-        $redirect = $_SESSION['redirect_uri'] ?? $this->httpHost() . $this->urlFor('app.dashboard');
+        $redirect = $_SESSION['redirect_uri'] ?: $this->httpHost() . $this->urlFor('app.dashboard');
         return $this->respondWithData(['redirect' => $redirect]);
       } else if (isset($_SESSION['login_openid']) && is_numeric($_SESSION['login_openid'])) {
         // 没有网页授权获取用户基本信息，通过公众号被动回复连接授权登录
@@ -42,7 +42,7 @@ class QrLoginAction extends Action
           $_SESSION['groupId'] = $admin['groupId'];
           $_SESSION['user_openid'] = $openid;
           $this->admin->updateEntityToArray(['lastLoginTime' => time(), 'lastLoginIp' => $this->getIP()], ['id' => $admin['id']]);
-          $redirect = $_SESSION['redirect_uri'] ?? $this->httpHost() . $this->urlFor('app.dashboard');
+          $redirect = $_SESSION['redirect_uri'] ?: $this->httpHost() . $this->urlFor('app.dashboard');
           return $this->respondWithData(['redirect' => $redirect]);
         } else {
           return $this->respondWithData(['reload' => true, 'message' => '帐号已被锁定，无法登录！！'], 400);
